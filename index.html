@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body>
+    <section class="py-10 px-5">
+        <select class="border  w-full border-gray-300 rounded-md py-3 px-4 hidden" id="select"></select>
+        <div class="relative w-full max-w-[90%] m-5 mx-auto">
+            <div class="flex z-50 justify-between items-center absolute w-full min-h-full px-5" id="dragarea">
+                <a id="prev"
+                    class="grid cursor-pointer group  active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500  rounded-md ">
+                    <i class="opacity-10 group-hover:opacity-100 fa-solid fa-chevron-circle-left text-4xl"></i>
+                </a>
+                <a id="next"
+                    class="grid cursor-pointer group  active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500  rounded-md ">
+                    <i class="opacity-10 group-hover:opacity-100 fa-solid fa-chevron-circle-right text-4xl"></i>
+                </a>
+            </div>
+            <div id="area"></div>
+
+            <div id="controls">
+                <input id="current-percent" size="3" value="0" /> %
+            </div>
+        </div>
+    </section>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
+    <script src="epub/epub.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
