@@ -7,23 +7,14 @@ var next = document.getElementById("next");
 var prev = document.getElementById("prev");
 var slider = document.createElement("input");
 
-let selectedBook = "files/Finishing well (ebook) - Greater.epub";
+let selectedBook = "files/The last words of Jesus (ebook) - Greater.epub";
 
 const select = document.getElementById("select");
 
 const books = [
-  {
-    title: "Finishing Well Small",
-    book: "file/finishing-well.epub",
-  },
-  {
-    title: "Learn",
-    book: "file/learn.epub",
-  },
-  {
-    title: "The Art of War",
-    book: "file/The_Art_Of_War.epub",
-  },
+  { title: "Finishing Well Small", book: "file/finishing-well.epub" },
+  { title: "Learn", book: "file/learn.epub" },
+  { title: "The Art of War", book: "file/The_Art_Of_War.epub" },
 ];
 
 // Populate the select element
@@ -36,25 +27,25 @@ var area = document.getElementById("area");
 var dragarea = document.getElementById("dragarea");
 
 // Touch & drag variables
-var startX = 0;
-var isDragging = false;
+var startX = 0,
+  startY = 0,
+  isDragging = false;
 var threshold = 50; // Minimum pixels to consider as a swipe
 
 // Helper function: loads an ePub book into the viewer
 function loadBook(bookUrl) {
-  // Clear any existing viewer content
-  area.innerHTML = "";
-  
+  area.innerHTML = ""; // Clear any existing viewer content
+
   // Initialize new ePub instance and rendition
   book = ePub(bookUrl);
   rendition = book.renderTo("area", {
+    method: "continuous",
     width: "100%",
     height: 600,
     spread: "always",
   });
   rendition.display();
 
-  // After the book is ready, check for a stored location (or display default)
   book.ready.then(() => {
     const storedLocation = localStorage.getItem("book-location");
     if (storedLocation) {
@@ -70,11 +61,8 @@ function loadBook(bookUrl) {
       localStorage.setItem("book-location", location.start.cfi);
     }
 
-    // Determine the correct buttons based on text direction
-    var nextBtn =
-      book.package.metadata.direction === "rtl" ? prev : next;
-    var prevBtn =
-      book.package.metadata.direction === "rtl" ? next : prev;
+    var nextBtn = book.package.metadata.direction === "rtl" ? prev : next;
+    var prevBtn = book.package.metadata.direction === "rtl" ? next : prev;
 
     nextBtn.style.visibility = location.atEnd ? "hidden" : "visible";
     prevBtn.style.visibility = location.atStart ? "hidden" : "visible";
@@ -91,104 +79,83 @@ select.addEventListener("change", (e) => {
 });
 
 // Navigation event listeners for next/prev buttons
-next.addEventListener(
-  "click",
-  function (e) {
-    // For RTL languages, swap next/prev behavior
-    if (book.package.metadata.direction === "rtl") {
-      rendition.prev();
-    } else {
-      rendition.next();
-    }
-    e.preventDefault();
-    window.scroll({ top: 0, left: 0, behavior: "smooth" });
-  },
-  false
-);
+next.addEventListener("click", function (e) {
+  book.package.metadata.direction === "rtl" ? rendition.prev() : rendition.next();
+  e.preventDefault();
+  window.scroll({ top: 0, left: 0, behavior: "smooth" });
+});
 
-prev.addEventListener(
-  "click",
-  function (e) {
-    if (book.package.metadata.direction === "rtl") {
-      rendition.next();
-    } else {
-      rendition.prev();
-    }
-    e.preventDefault();
-    window.scroll({ top: 0, left: 0, behavior: "smooth" });
-  },
-  false
-);
+prev.addEventListener("click", function (e) {
+  book.package.metadata.direction === "rtl" ? rendition.next() : rendition.prev();
+  e.preventDefault();
+  window.scroll({ top: 0, left: 0, behavior: "smooth" });
+});
 
 // Keyboard navigation listener
-var keyListener = function (e) {
-  if ((e.keyCode || e.which) === 37) {
-    book.package.metadata.direction === "rtl"
-      ? rendition.next()
-      : rendition.prev();
+document.addEventListener("keyup", function (e) {
+  if (e.keyCode === 37) {
+    book.package.metadata.direction === "rtl" ? rendition.next() : rendition.prev();
   }
-  if ((e.keyCode || e.which) === 39) {
-    book.package.metadata.direction === "rtl"
-      ? rendition.prev()
-      : rendition.next();
+  if (e.keyCode === 39) {
+    book.package.metadata.direction === "rtl" ? rendition.prev() : rendition.next();
   }
-};
-document.addEventListener("keyup", keyListener, false);
+});
 
-// --- Touch Events ---
-dragarea.addEventListener(
-  "touchstart",
-  function (e) {
-    startX = e.changedTouches[0].clientX;
-  },
-  false
-);
+// --- Touch Events for Left/Right Swipe ---
+dragarea.addEventListener("touchstart", function (e) {
+  startX = e.changedTouches[0].clientX;
+  startY = e.changedTouches[0].clientY;
+}, false);
 
-dragarea.addEventListener(
-  "touchend",
-  function (e) {
-    var endX = e.changedTouches[0].clientX;
-    handleDrag(endX - startX);
-  },
-  false
-);
+dragarea.addEventListener("touchend", function (e) {
+  var endX = e.changedTouches[0].clientX;
+  var endY = e.changedTouches[0].clientY;
+  handleSwipe(endX - startX, endY - startY);
+}, false);
 
 // --- Mouse Events ---
 dragarea.addEventListener("mousedown", function (e) {
   isDragging = true;
   startX = e.clientX;
+  startY = e.clientY;
 });
 
 dragarea.addEventListener("mouseup", function (e) {
   if (!isDragging) return;
   isDragging = false;
   var endX = e.clientX;
-  handleDrag(endX - startX);
+  var endY = e.clientY;
+  handleSwipe(endX - startX, endY - startY);
 });
 
-dragarea.addEventListener(
-  "mousemove",
-  function (e) {
-    if (isDragging) e.preventDefault();
-  },
-  false
-);
+dragarea.addEventListener("mousemove", function (e) {
+  if (isDragging) e.preventDefault();
+}, false);
 
 // Helper function to handle swipe/drag navigation
-function handleDrag(deltaX) {
-  if (Math.abs(deltaX) < threshold) return; // Not enough movement
-
-  if (deltaX < 0) {
-    // Dragged left: for LTR, go to next; for RTL, go to previous
-    book.package.metadata.direction === "rtl"
-      ? rendition.prev()
-      : rendition.next();
+function handleSwipe(deltaX, deltaY) {
+  if (Math.abs(deltaX) > Math.abs(deltaY)) {
+    // Horizontal swipe (left/right)
+    if (Math.abs(deltaX) >= threshold) {
+      if (deltaX < 0) {
+        // Swiped left
+        book.package.metadata.direction === "rtl" ? rendition.prev() : rendition.next();
+      } else {
+        // Swiped right
+        book.package.metadata.direction === "rtl" ? rendition.next() : rendition.prev();
+      }
+    }
   } else {
-    // Dragged right: for LTR, go to previous; for RTL, go to next
-    book.package.metadata.direction === "rtl"
-      ? rendition.next()
-      : rendition.prev();
+    // Vertical swipe (up/down)
+    if (Math.abs(deltaY) >= threshold) {
+      if (deltaY < 0) {
+        // Swiped up (next page)
+        rendition.next();
+      } else {
+        // Swiped down (previous page)
+        rendition.prev();
+      }
+    }
   }
-
   window.scroll({ top: 0, left: 0, behavior: "smooth" });
 }
