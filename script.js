@@ -7,7 +7,7 @@ var next = document.getElementById("next");
 var prev = document.getElementById("prev");
 var slider = document.createElement("input");
 
-let selectedBook = "files/The last words of Jesus (ebook) - Greater.epub";
+let selectedBook = "files/the-last-words.epub";
 
 const select = document.getElementById("select");
 
