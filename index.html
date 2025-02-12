@@ -15,9 +15,9 @@
     <section class="py-10 px-5">
         <select class="border  w-full border-gray-300 rounded-md py-3 px-4 hidden" id="select"></select>
         <div class="relative w-full max-w-[90%] m-5 mx-auto">
-            <div class="flex max-md:flex-col z-50 justify-between items-center absolute w-full min-h-full px-5" id="dragarea">
+            <div class="flex z-50 max-md:flex-col justify-between items-center absolute w-full min-h-full px-5" id="dragarea">
                 <a id="prev"
-                    class="grid cursor-pointer group  active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500  rounded-md ">
+                    class="grid relative z-50 cursor-pointer group  active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500  rounded-md ">
                     <span class="hidden md:inline-block">
 
                         <i class="opacity-10 group-hover:opacity-100 fa-solid  fa-chevron-circle-left text-4xl"></i>
@@ -28,7 +28,7 @@
                     </span>
                 </a>
                 <a id="next"
-                    class="grid cursor-pointer group  active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500  rounded-md ">
+                    class="grid relative z-50 cursor-pointer group  active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500  rounded-md ">
                     <span class="hidden md:inline-block">
 
                         <i class="opacity-10 group-hover:opacity-100 fa-solid  fa-chevron-circle-right text-4xl"></i>
@@ -39,7 +39,7 @@
                     </span>
                 </a>
             </div>
-            <div id="area"></div>
+            <div id="area" class="w-full lg:max-w-2xl mx-auto"></div>
 
             <div id="controls">
                 <input id="current-percent" size="3" value="0" /> %

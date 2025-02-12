@@ -7,7 +7,8 @@ var next = document.getElementById("next");
 var prev = document.getElementById("prev");
 var slider = document.createElement("input");
 
-let selectedBook = "files/the-last-words.epub";
+// let selectedBook = "files/The_Art_Of_War.epub";
+let selectedBook = "files/lastwords.epub";
 
 const select = document.getElementById("select");
 
@@ -39,11 +40,13 @@ function loadBook(bookUrl) {
   // Initialize new ePub instance and rendition
   book = ePub(bookUrl);
   rendition = book.renderTo("area", {
+    flow: "paginated",
     method: "continuous",
     width: "100%",
     height: 600,
-    spread: "always",
+    spread: "none",
   });
+  
   rendition.display();
 
   book.ready.then(() => {
