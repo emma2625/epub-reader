@@ -368,6 +368,7 @@ saveBtn.addEventListener("click", function () {
 
   // Clear input & hide popup
   selectedTextInput.value = "";
+  isHighlighting = false;
   notePopup.classList.add("hidden");
   window.getSelection().removeAllRanges(); // Clear selection
   loadNotes();
