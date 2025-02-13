@@ -49,7 +49,7 @@ let highlightTimeout = null; // For debouncing
 
 // 1️⃣ Toggle Notes View
 noteViewToggle.addEventListener("click", function () {
-  notesNav.classList.toggle("-translate-x-[19rem]");
+  notesNav.classList.toggle("-translate-x-[10rem]");
   notesNavIcon.classList.toggle('fa-bars');
   notesNavIcon.classList.toggle('fa-times');
 });

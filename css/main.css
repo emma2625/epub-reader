@@ -662,6 +662,10 @@
   .max-w-lg {
     max-width: var(--container-lg);
   }
+  .-translate-x-\[10rem\] {
+    --tw-translate-x: calc(10rem * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
   .-translate-x-\[19rem\] {
     --tw-translate-x: calc(19rem * -1);
     translate: var(--tw-translate-x) var(--tw-translate-y);
