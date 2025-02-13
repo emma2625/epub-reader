@@ -163,7 +163,7 @@ function loadBook(bookUrl) {
           isHighlighting = false;
           notePopup.classList.add("hidden"); // Hide note pop-up when no text
         }
-      }, 300);
+      }, 1500);
     });
 
     // Handle Touch Events (for swipes)
