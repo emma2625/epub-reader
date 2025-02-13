@@ -53,7 +53,16 @@ noteViewToggle.addEventListener("click", function () {
   notesNavIcon.classList.toggle('fa-bars');
   notesNavIcon.classList.toggle('fa-times');
 });
-
+// Add event listener to document for clicks outside of the noteViewToggle or notesSidebar
+document.addEventListener("click", function (event) {
+  // Check if the click was outside the toggle button or sidebar
+  if (!noteViewToggle.contains(event.target) && !notesSidebar.contains(event.target)) {
+    // Close the sidebar and reset the icon classes if clicked outside
+    notesSidebar.classList.add("-translate-x-full");
+    notesNavIcon.classList.add('fa-bars');
+    notesNavIcon.classList.remove('fa-times');
+  }
+});
 
 // Helper function to help save notes
 function loadNotes() {
