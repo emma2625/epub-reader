@@ -150,9 +150,9 @@ function loadBook(bookUrl) {
     let doc = contents.document;
 
     // Handle Click Events
-    win.addEventListener("click", function () {
-      window.parent.postMessage({ type: "epub-clicked" }, "*");
-    });
+    // win.addEventListener("click", function () {
+    //   window.parent.postMessage({ type: "epub-clicked" }, "*");
+    // });
 
     // Detect text selection (highlight) with debounce
     doc.addEventListener("selectionchange", function () {
