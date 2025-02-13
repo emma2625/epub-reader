@@ -560,6 +560,12 @@
   .left-0 {
     left: calc(var(--spacing) * 0);
   }
+  .z-2 {
+    z-index: 2;
+  }
+  .z-6 {
+    z-index: 6;
+  }
   .z-50 {
     z-index: 50;
   }

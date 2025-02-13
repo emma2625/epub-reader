@@ -12,15 +12,8 @@
 </head>
 
 <body>
-    <nav class="flex items-start gap-x-5 sticky top-0" id="mainNav">
-        <aside id="navBody" class="w-full max-w-[20rem] bg-gray-600 text-white rounded-r min-h-screen py-5 px-2 -translate-x-full fixed top-12 transition-transform duration-300 z-50">
-            <p class="font-bold border-b border-gray-100 pb-1 mb-2">Notes</p>
-            <ul>
-                <li class="mb-2">
-                    <button class="hover:bg-orange-500 border-none bg-transparent w-full p-1 text-left"> text 1</button>
-                </li>
-            </ul>
-        </aside>
+    
+    <nav class="flex items-start gap-x-5 sticky top-0 z-50" id="mainNav">
 
         <button id="noteViewToggle" type="button" class="bg-gray-600 py-1 px-2 rounded-lg text-white mt-2 ml-4">
             <i class="fa-solid fa-bars"></i>
@@ -74,7 +67,14 @@
             </div>
         </div>
     </section>
-
+    <aside id="navBody" class="w-full max-w-[20rem] bg-gray-600 text-white rounded-r min-h-screen py-5 px-2 -translate-x-full fixed top-12 transition-transform duration-300 z-50">
+        <p class="font-bold border-b border-gray-100 pb-1 mb-2">Notes</p>
+        <ul class=" z-[999]">
+            <li class="mb-2">
+                <button class="hover:bg-orange-500 border-none bg-transparent w-full p-1 text-left"> text 1</button>
+            </li>
+        </ul>
+    </aside>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
     <script src="epub/epub.js"></script>
