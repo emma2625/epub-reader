@@ -12,8 +12,8 @@
 </head>
 
 <body>
-    <nav class="flex items-start gap-x-5 -translate-x-[10rem] transition-transform duration-300 fixed z-[999] top-0 left-0" id="mainNav">
-        <aside class="w-full max-w-[20rem] bg-gray-600 text-white rounded-r min-h-screen py-5 px-2">
+    <nav class="flex items-start gap-x-5" id="mainNav">
+        <aside id="navBody" class="w-full max-w-[20rem] bg-gray-600 text-white rounded-r min-h-screen py-5 px-2 -translate-x-full fixed top-12 transition-transform duration-300">
             <p class="font-bold border-b border-gray-100 pb-1 mb-2">Notes</p>
             <ul>
                 <li class="mb-2">
@@ -22,7 +22,7 @@
             </ul>
         </aside>
 
-        <button id="noteViewToggle" type="button" class="bg-gray-600 py-1 px-2 rounded-lg text-white mt-4">
+        <button id="noteViewToggle" type="button" class="bg-gray-600 py-1 px-2 rounded-lg text-white mt-2 ml-4">
             <i class="fa-solid fa-bars"></i>
         </button>
     </nav>
