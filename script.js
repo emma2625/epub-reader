@@ -1,31 +1,33 @@
-// Global references for book and rendition so event listeners use the latest instance
-let book, rendition;
-
 var controls = document.getElementById("controls");
 var currentPage = document.getElementById("current-percent");
 var next = document.getElementById("next");
 var prev = document.getElementById("prev");
 var slider = document.createElement("input");
 
-// let selectedBook = "files/The_Art_Of_War.epub";
+// POP UP
+const notePopup = document.querySelector("#noteSaver"); // Note pop-up
+const selectedTextInput = document.getElementById("selectedTextInput");
+const cancelBtn = notePopup.querySelector("#cancelNoteSaver");
+const saveBtn = notePopup.querySelector("#saveNote");
+
+// Notes View
+const noteViewToggle = document.getElementById("noteViewToggle");
+const notesSidebar = document.querySelector("aside");
+const notesList = notesSidebar.querySelector("ul");
+const notesNav = document.querySelector("#mainNav");
+const notesNavIcon = document.querySelector("#noteViewToggle i");
+
+
+
+
+// Global references for book and rendition so event listeners use the latest instance
+let book, rendition;
+
 let selectedBook = "files/lastwords.epub";
-
-const select = document.getElementById("select");
-
-const books = [
-  { title: "Finishing Well Small", book: "file/finishing-well.epub" },
-  { title: "Learn", book: "file/learn.epub" },
-  { title: "The Art of War", book: "file/The_Art_Of_War.epub" },
-];
-
-// Populate the select element
-select.innerHTML = books
-  .map((book) => `<option value="${book.book}">${book.title}</option>`)
-  .join("");
 
 // Get the container elements for the ePub viewer
 var area = document.getElementById("area");
-var dragarea = document.getElementById("dragarea");
+var dragarea = document.getElementById("area");
 
 // Touch & drag variables
 var startX = 0,
@@ -33,11 +35,80 @@ var startX = 0,
   isDragging = false;
 var threshold = 50; // Minimum pixels to consider as a swipe
 
+// Global flag to check if text is being highlighted
+let isHighlighting = false;
+let highlightTimeout = null; // For debouncing
+
+
+
+
+
+/**************************************************************************************************************** */
+
+
+
+// 1️⃣ Toggle Notes View
+noteViewToggle.addEventListener("click", function () {
+  notesNav.classList.toggle("-translate-x-[19rem]");
+  notesNavIcon.classList.toggle('fa-bars');
+  notesNavIcon.classList.toggle('fa-times');
+});
+
+
+// Helper function to help save notes
+function loadNotes() {
+  notesList.innerHTML = ""; // Clear list before reloading
+
+  const notes = JSON.parse(localStorage.getItem("notes")) || [];
+  notes.forEach((note) => {
+    const li = document.createElement("li");
+    li.classList.add("mb-2", "flex", "justify-between", "items-center");
+
+    // Note Button (Navigates to location)
+    const noteBtn = document.createElement("button");
+    noteBtn.classList.add("hover:bg-orange-500", "border-none", "bg-transparent", "w-full", "p-1", "text-left");
+    noteBtn.textContent = note.text.substring(0, 30) + "..."; // Show preview
+
+    noteBtn.addEventListener("click", function () {
+      if (rendition) {
+        rendition.display(note.page); // Navigate to the highlighted text
+      }
+    });
+
+    // Delete Button
+    const deleteBtn = document.createElement("button");
+    deleteBtn.classList.add("bg-red-500", "text-white", "rounded", "px-2", "py-1", "ml-2");
+    deleteBtn.innerHTML = `<i class="fa-solid fa-trash-alt text-white text-sm"></i>`; // Trash icon
+
+    deleteBtn.addEventListener("click", function () {
+      deleteNote(note.id);
+    });
+
+    // Append elements
+    li.appendChild(noteBtn);
+    li.appendChild(deleteBtn);
+    notesList.appendChild(li);
+  });
+}
+
+
+// Helper Function Delete a note from local storage
+function deleteNote(noteId) {
+  let notes = JSON.parse(localStorage.getItem("notes")) || [];
+  notes = notes.filter((note) => note.id !== noteId); // Remove note by ID
+  localStorage.setItem("notes", JSON.stringify(notes));
+
+  loadNotes(); // Refresh notes list
+}
+
+
+// Initial Load of all Notes
+loadNotes();
+
 // Helper function: loads an ePub book into the viewer
 function loadBook(bookUrl) {
-  area.innerHTML = ""; // Clear any existing viewer content
+  area.innerHTML = ""; // Clear existing viewer content
 
-  // Initialize new ePub instance and rendition
   book = ePub(bookUrl);
   rendition = book.renderTo("area", {
     flow: "paginated",
@@ -46,7 +117,7 @@ function loadBook(bookUrl) {
     height: 600,
     spread: "none",
   });
-  
+
   rendition.display();
 
   book.ready.then(() => {
@@ -58,38 +129,136 @@ function loadBook(bookUrl) {
     }
   });
 
-  // Update navigation button visibility when the location changes
-  rendition.on("relocated", function (location) {
-    if (location && location.start && location.start.cfi) {
-      localStorage.setItem("book-location", location.start.cfi);
-    }
+  // Register event listeners inside ePub iframe
+  rendition.hooks.content.register((contents) => {
+    let win = contents.window;
+    let doc = contents.document;
 
-    var nextBtn = book.package.metadata.direction === "rtl" ? prev : next;
-    var prevBtn = book.package.metadata.direction === "rtl" ? next : prev;
+    // Handle Click Events
+    win.addEventListener("click", function () {
+      window.parent.postMessage({ type: "epub-clicked" }, "*");
+    });
 
-    nextBtn.style.visibility = location.atEnd ? "hidden" : "visible";
-    prevBtn.style.visibility = location.atStart ? "hidden" : "visible";
+    // Detect text selection (highlight) with debounce
+    doc.addEventListener("selectionchange", function () {
+      if (highlightTimeout) clearTimeout(highlightTimeout);
+
+      highlightTimeout = setTimeout(() => {
+        let selectedText = win.getSelection().toString().trim();
+
+        if (selectedText.length > 0) {
+          isHighlighting = true;
+          selectedTextInput.value = selectedText; // Show text in textarea
+          notePopup.classList.remove("hidden"); // Show note pop-up
+        } else {
+          isHighlighting = false;
+          notePopup.classList.add("hidden"); // Hide note pop-up when no text
+        }
+      }, 300);
+    });
+
+    // Handle Touch Events (for swipes)
+    let startX = 0,
+      startY = 0;
+    win.addEventListener("touchstart", function (e) {
+      if (isHighlighting) return; // Ignore swipe if highlighting
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    });
+
+    win.addEventListener("touchend", function (e) {
+      if (isHighlighting) return; // Ignore swipe if highlighting
+      let endX = e.changedTouches[0].clientX;
+      let endY = e.changedTouches[0].clientY;
+      let deltaX = endX - startX;
+      let deltaY = endY - startY;
+
+      handleSwipe(deltaX, deltaY);
+    });
+
+    // Handle Mouse Drag Events
+    // let isDragging = false;
+    // win.addEventListener("mousedown", function (e) {
+    //   if (isHighlighting) return; // Ignore drag if highlighting
+    //   isDragging = true;
+    //   startX = e.clientX;
+    //   startY = e.clientY;
+    // });
+
+    // win.addEventListener("mouseup", function (e) {
+    //   if (!isDragging || isHighlighting) return; // Ignore swipe if highlighting
+    //   isDragging = false;
+    //   let deltaX = e.clientX - startX;
+    //   let deltaY = e.clientY - startY;
+
+    //   handleSwipe(deltaX, deltaY);
+    // });
+
+    // win.addEventListener("mousemove", function (e) {
+    //   if (isDragging && !isHighlighting) e.preventDefault();
+    // });
+
+    // Clear highlighting when clicking elsewhere
+    doc.addEventListener("click", function () {
+      if (!win.getSelection().toString().trim()) {
+        isHighlighting = false;
+      }
+    });
   });
+
+  // Handle swipe actions
+  function handleSwipe(deltaX, deltaY) {
+    if (isHighlighting) return; // Prevent swipe if highlighting
+
+    let threshold = 50; // Minimum movement to consider a swipe
+
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      // Horizontal swipe (left/right)
+      if (Math.abs(deltaX) >= threshold) {
+        if (deltaX < 0) {
+          // Swiped left → Next page
+          book.package.metadata.direction === "rtl"
+            ? rendition.prev()
+            : rendition.next();
+        } else {
+          // Swiped right → Previous page
+          book.package.metadata.direction === "rtl"
+            ? rendition.next()
+            : rendition.prev();
+        }
+      }
+    } else {
+      // Vertical swipe (up/down)
+      if (Math.abs(deltaY) >= threshold) {
+        if (deltaY < 0) {
+          // Swiped up → Next page
+          rendition.next();
+        } else {
+          // Swiped down → Previous page
+          rendition.prev();
+        }
+      }
+    }
+    window.scroll({ top: 0, left: 0, behavior: "smooth" });
+  }
 }
 
 // Initial load of the book
 loadBook(selectedBook);
 
-// When a new book is selected, reload the viewer with that book
-select.addEventListener("change", (e) => {
-  selectedBook = select.value;
-  loadBook(selectedBook);
-});
-
 // Navigation event listeners for next/prev buttons
 next.addEventListener("click", function (e) {
-  book.package.metadata.direction === "rtl" ? rendition.prev() : rendition.next();
+  book.package.metadata.direction === "rtl"
+    ? rendition.prev()
+    : rendition.next();
   e.preventDefault();
   window.scroll({ top: 0, left: 0, behavior: "smooth" });
 });
 
 prev.addEventListener("click", function (e) {
-  book.package.metadata.direction === "rtl" ? rendition.next() : rendition.prev();
+  book.package.metadata.direction === "rtl"
+    ? rendition.next()
+    : rendition.prev();
   e.preventDefault();
   window.scroll({ top: 0, left: 0, behavior: "smooth" });
 });
@@ -97,68 +266,60 @@ prev.addEventListener("click", function (e) {
 // Keyboard navigation listener
 document.addEventListener("keyup", function (e) {
   if (e.keyCode === 37) {
-    book.package.metadata.direction === "rtl" ? rendition.next() : rendition.prev();
+    book.package.metadata.direction === "rtl"
+      ? rendition.next()
+      : rendition.prev();
   }
   if (e.keyCode === 39) {
-    book.package.metadata.direction === "rtl" ? rendition.prev() : rendition.next();
+    book.package.metadata.direction === "rtl"
+      ? rendition.prev()
+      : rendition.next();
   }
 });
 
-// --- Touch Events for Left/Right Swipe ---
-dragarea.addEventListener("touchstart", function (e) {
-  startX = e.changedTouches[0].clientX;
-  startY = e.changedTouches[0].clientY;
-}, false);
+// SAVE NOTE EVENTS:
 
-dragarea.addEventListener("touchend", function (e) {
-  var endX = e.changedTouches[0].clientX;
-  var endY = e.changedTouches[0].clientY;
-  handleSwipe(endX - startX, endY - startY);
-}, false);
-
-// --- Mouse Events ---
-dragarea.addEventListener("mousedown", function (e) {
-  isDragging = true;
-  startX = e.clientX;
-  startY = e.clientY;
+cancelBtn.addEventListener("click", function () {
+  selectedTextInput.value = "";
+  isHighlighting = false;
+  notePopup.classList.add("hidden");
+  window.getSelection().removeAllRanges(); // Clear selection
 });
 
-dragarea.addEventListener("mouseup", function (e) {
-  if (!isDragging) return;
-  isDragging = false;
-  var endX = e.clientX;
-  var endY = e.clientY;
-  handleSwipe(endX - startX, endY - startY);
+// Save button: Save the note to localStorage
+saveBtn.addEventListener("click", function () {
+  const highlightedText = selectedTextInput.value.trim();
+  if (!highlightedText) return;
+
+  // Ensure book metadata exists
+  const bookTitle = book?.package?.metadata?.title || "Unknown Book";
+  const bookId = book?.package?.metadata?.identifier || "unknown_id";
+
+  // Get current book location
+  const location = rendition.currentLocation();
+  const cfi = location?.start?.cfi || "unknown_location"; // Prevents undefined errors
+
+  // Load existing notes from local storage or create a new array
+  const notes = JSON.parse(localStorage.getItem("notes")) || [];
+
+  const newNote = {
+    id: Date.now(),
+    book: bookTitle,
+    text: highlightedText,
+    page: cfi, // Save the exact location of the highlighted text
+    bookId: bookId,
+  };
+
+  // Save the note to local storage
+  notes.push(newNote);
+  localStorage.setItem("notes", JSON.stringify(notes));
+
+  // console.log("Note Saved:", newNote);
+
+  // Clear input & hide popup
+  selectedTextInput.value = "";
+  notePopup.classList.add("hidden");
+  window.getSelection().removeAllRanges(); // Clear selection
+  loadNotes();
+  alert("Note Saved");
 });
-
-dragarea.addEventListener("mousemove", function (e) {
-  if (isDragging) e.preventDefault();
-}, false);
-
-// Helper function to handle swipe/drag navigation
-function handleSwipe(deltaX, deltaY) {
-  if (Math.abs(deltaX) > Math.abs(deltaY)) {
-    // Horizontal swipe (left/right)
-    if (Math.abs(deltaX) >= threshold) {
-      if (deltaX < 0) {
-        // Swiped left
-        book.package.metadata.direction === "rtl" ? rendition.prev() : rendition.next();
-      } else {
-        // Swiped right
-        book.package.metadata.direction === "rtl" ? rendition.next() : rendition.prev();
-      }
-    }
-  } else {
-    // Vertical swipe (up/down)
-    if (Math.abs(deltaY) >= threshold) {
-      if (deltaY < 0) {
-        // Swiped up (next page)
-        rendition.next();
-      } else {
-        // Swiped down (previous page)
-        rendition.prev();
-      }
-    }
-  }
-  window.scroll({ top: 0, left: 0, behavior: "smooth" });
-}
