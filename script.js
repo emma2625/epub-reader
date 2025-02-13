@@ -171,6 +171,9 @@ function loadBook(bookUrl) {
       startY = 0;
     win.addEventListener("touchstart", function (e) {
       if (isHighlighting) return; // Ignore swipe if highlighting
+      if (e.touches.length > 1 || e.touches[0].clientY > 0) {
+        e.preventDefault(); // Prevent scrolling or refresh gesture
+      }
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
     });
