@@ -3,6 +3,48 @@ var currentPage = document.getElementById("current-percent");
 var next = document.getElementById("next");
 var prev = document.getElementById("prev");
 var slider = document.createElement("input");
+const playAllButton = document.querySelector("#playAllButton");
+
+// Talkify
+talkify.config.remoteService.host = 'https://talkify.net';
+talkify.config.remoteService.apiKey = '';
+
+var player = new talkify.TtsPlayer().enableTextHighlighting();
+var playlist;
+
+
+function playAllParagraphs() {
+  if (!rendition) return; // Ensure rendition exists
+
+  let iframe = document.querySelector("#area iframe");
+  
+  if (!iframe) {
+    alert("No content found!");
+    return;
+  }
+  
+  let doc = iframe.contentDocument || iframe.contentWindow.document;
+  let paragraphs = doc.querySelectorAll("p");
+  let texts = Array.from(paragraphs).map((p) => p.textContent.trim()).filter((t) => t !== "");
+  if (texts.length > 0) {
+     playlist = new talkify.playlist()
+    .begin()
+    .usingPlayer(player)
+    .withTextInteraction()
+    .withElements(paragraphs) //<--Any element you'd like. Leave blank to let Talkify make a good guess
+    .build();
+    
+    // console.log(iframe.contentDocument, paragraphs);
+    // return
+    
+    playlist.play();
+  } else {
+    alert("No text found to play!");
+  }
+}
+
+
+// playAllButton.addEventListener("click", playAllParagraphs);
 
 // POP UP
 const notePopup = document.querySelector("#noteSaver"); // Note pop-up
@@ -12,7 +54,7 @@ const saveBtn = notePopup.querySelector("#saveNote");
 
 // Notes View
 const noteViewToggle = document.getElementById("noteViewToggle");
-const notesSidebar = document.querySelector("#mainNav");
+const notesSidebar = document.querySelector("#mainNav #sideBar");
 const notesList = notesSidebar.querySelector("ul");
 const notesNav = document.querySelector("#mainNav");
 const notesNavIcon = document.querySelector("#noteViewToggle i");
@@ -40,7 +82,7 @@ let highlightTimeout = null; // For debouncing
 
 // 1️⃣ Toggle Notes View
 noteViewToggle.addEventListener("click", function () {
-  notesSidebar.classList.toggle("-translate-x-[24rem]");
+  notesSidebar.classList.toggle("-translate-x-full");
   notesNavIcon.classList.toggle("fa-bars");
   notesNavIcon.classList.toggle("fa-times");
 });
@@ -52,7 +94,7 @@ document.addEventListener("click", function (event) {
     !notesSidebar.contains(event.target)
   ) {
     // Close the sidebar and reset the icon classes if clicked outside
-    notesSidebar.classList.add("-translate-x-[24rem]");
+    notesSidebar.classList.add("-translate-x-full");
     notesNavIcon.classList.add("fa-bars");
     notesNavIcon.classList.remove("fa-times");
   }
@@ -170,6 +212,7 @@ function loadBook(bookUrl) {
 
         isHighlighting = true;
         selectedTextInput.value = selectedText;
+
 
         // Get the position of the selected text
         let range = selection.getRangeAt(0);
@@ -303,14 +346,17 @@ next.addEventListener("click", function (e) {
     : rendition.next();
   e.preventDefault();
   window.scroll({ top: 0, left: 0, behavior: "smooth" });
+
+  playlist.stop();
 });
 
 prev.addEventListener("click", function (e) {
   book.package.metadata.direction === "rtl"
-    ? rendition.next()
-    : rendition.prev();
+  ? rendition.next()
+  : rendition.prev();
   e.preventDefault();
   window.scroll({ top: 0, left: 0, behavior: "smooth" });
+  playlist.stop();
 });
 
 // Keyboard navigation listener

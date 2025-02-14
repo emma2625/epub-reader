@@ -3,6 +3,83 @@ var currentPage = document.getElementById("current-percent");
 var next = document.getElementById("next");
 var prev = document.getElementById("prev");
 var slider = document.createElement("input");
+const playAllButton = document.querySelector("#playAllButton");
+
+// Talkify
+talkify.config.remoteService.host = "https://talkify.net";
+talkify.config.remoteService.apiKey = "bbedaaab-99fe-4394-b06e-b6901b33f6ea";
+
+var player = new talkify.TtsPlayer().enableTextHighlighting();
+var speech;
+
+function playText(text, voiceName = "Google US English") {
+  if (speechSynthesis.speaking) {
+    speechSynthesis.cancel(); // Stop any ongoing speech before starting new
+  }
+
+  speech = new SpeechSynthesisUtterance(text);
+  speech.lang = "en-US"; // Change language if needed
+  speech.rate = 1; // Adjust speed (0.5 - 2)
+  speech.pitch = 1; // Adjust pitch (0 - 2)
+
+  // Set the selected voice
+  let voices = getVoices();
+  let selectedVoice = voices.find(v => v.name === voiceName);
+  if (selectedVoice) {
+      speech.voice = selectedVoice;
+  }
+
+  speechSynthesis.speak(speech);
+}
+
+
+function populateVoiceList() {
+  let voices = getVoices();
+  let voiceSelect = document.getElementById("voiceSelect");
+  voiceSelect.innerHTML = ""; // Clear existing options
+
+  console.log(voices);
+  
+
+  voices.forEach(voice => {
+      let option = document.createElement("option");
+      option.value = voice.name;
+      option.textContent = `${voice.name} (${voice.lang})`;
+      voiceSelect.appendChild(option);
+  });
+}
+
+function getVoices() {
+  return speechSynthesis.getVoices();
+}
+
+function stopSpeech() {
+  speechSynthesis.cancel(); // Stop the speech
+}
+
+populateVoiceList();
+playAllButton.addEventListener("click", function () {
+  let iframe = document.querySelector("#area iframe");
+  if (!iframe) {
+    alert("No content found!");
+    return;
+  }
+
+  let doc = iframe.contentDocument || iframe.contentWindow.document;
+  let paragraphs = doc.querySelectorAll("p");
+  let texts = Array.from(paragraphs)
+    .map((p) => p.textContent.trim())
+    .filter((t) => t !== "");
+    if (texts.length > 0) {
+    console.log(texts);
+    texts = texts.join(" ")
+    console.log(texts);
+    
+    playText(texts);
+  } else {
+    alert("No text found to play!");
+  }
+});
 
 // POP UP
 const notePopup = document.querySelector("#noteSaver"); // Note pop-up
@@ -12,13 +89,10 @@ const saveBtn = notePopup.querySelector("#saveNote");
 
 // Notes View
 const noteViewToggle = document.getElementById("noteViewToggle");
-const notesSidebar = document.querySelector("aside");
+const notesSidebar = document.querySelector("#mainNav #sideBar");
 const notesList = notesSidebar.querySelector("ul");
 const notesNav = document.querySelector("#mainNav");
 const notesNavIcon = document.querySelector("#noteViewToggle i");
-
-
-
 
 // Global references for book and rendition so event listeners use the latest instance
 let book, rendition;
@@ -39,64 +113,25 @@ var threshold = 50; // Minimum pixels to consider as a swipe
 let isHighlighting = false;
 let highlightTimeout = null; // For debouncing
 
-
-
-
-
 /**************************************************************************************************************** */
-
-
 
 // 1️⃣ Toggle Notes View
 noteViewToggle.addEventListener("click", function () {
   notesSidebar.classList.toggle("-translate-x-full");
-  notesNavIcon.classList.toggle('fa-bars');
-  notesNavIcon.classList.toggle('fa-times');
+  notesNavIcon.classList.toggle("fa-bars");
+  notesNavIcon.classList.toggle("fa-times");
 });
-
-let debounceTimeout = null;
-
-function debounce(func, delay) {
-  clearTimeout(debounceTimeout);
-  debounceTimeout = setTimeout(func, delay);
-}
-
-
-function showNotePopup() {
-  let selection = window.getSelection();
-  if (!selection.rangeCount) return;
-
-  let range = selection.getRangeAt(0);
-  let rect = range.getBoundingClientRect();
-
-  if (rect.width === 0 && rect.height === 0) return; // Avoid empty selections
-
-  selectedTextInput.value = selection.toString().trim();
-  if (!selectedTextInput.value) return;
-
-  notePopup.classList.remove("hidden");
-
-  // Position the popup above the highlighted text
-  let topPosition = rect.top + window.scrollY - notePopup.offsetHeight - 10;
-  let leftPosition = rect.left + window.scrollX + rect.width / 2 - notePopup.offsetWidth / 2;
-
-  // Ensure the popup stays within the viewport
-  topPosition = Math.max(10, topPosition);
-  leftPosition = Math.max(10, Math.min(leftPosition, window.innerWidth - notePopup.offsetWidth - 10));
-
-  notePopup.style.top = `${topPosition}px`;
-  notePopup.style.left = `${leftPosition}px`;
-}
-
-
 // Add event listener to document for clicks outside of the noteViewToggle or notesSidebar
 document.addEventListener("click", function (event) {
   // Check if the click was outside the toggle button or sidebar
-  if (!noteViewToggle.contains(event.target) && !notesSidebar.contains(event.target)) {
+  if (
+    !noteViewToggle.contains(event.target) &&
+    !notesSidebar.contains(event.target)
+  ) {
     // Close the sidebar and reset the icon classes if clicked outside
     notesSidebar.classList.add("-translate-x-full");
-    notesNavIcon.classList.add('fa-bars');
-    notesNavIcon.classList.remove('fa-times');
+    notesNavIcon.classList.add("fa-bars");
+    notesNavIcon.classList.remove("fa-times");
   }
 });
 
@@ -111,7 +146,14 @@ function loadNotes() {
 
     // Note Button (Navigates to location)
     const noteBtn = document.createElement("button");
-    noteBtn.classList.add("hover:bg-orange-500", "border-none", "bg-transparent", "w-full", "p-1", "text-left");
+    noteBtn.classList.add(
+      "hover:bg-orange-500",
+      "border-none",
+      "bg-transparent",
+      "w-full",
+      "p-1",
+      "text-left"
+    );
     noteBtn.textContent = note.text.substring(0, 30) + "..."; // Show preview
 
     noteBtn.addEventListener("click", function () {
@@ -122,7 +164,14 @@ function loadNotes() {
 
     // Delete Button
     const deleteBtn = document.createElement("button");
-    deleteBtn.classList.add("bg-red-500", "text-white", "rounded", "px-2", "py-1", "ml-2");
+    deleteBtn.classList.add(
+      "bg-red-500",
+      "text-white",
+      "rounded",
+      "px-2",
+      "py-1",
+      "ml-2"
+    );
     deleteBtn.innerHTML = `<i class="fa-solid fa-trash-alt text-white text-sm"></i>`; // Trash icon
 
     deleteBtn.addEventListener("click", function () {
@@ -136,7 +185,6 @@ function loadNotes() {
   });
 }
 
-
 // Helper Function Delete a note from local storage
 function deleteNote(noteId) {
   let notes = JSON.parse(localStorage.getItem("notes")) || [];
@@ -146,11 +194,10 @@ function deleteNote(noteId) {
   loadNotes(); // Refresh notes list
 }
 
-
 // Initial Load of all Notes
 loadNotes();
 
-// ##################################### Helper function: loads an ePub book into the viewer #####################################
+// Helper function: loads an ePub book into the viewer
 function loadBook(bookUrl) {
   area.innerHTML = ""; // Clear existing viewer content
 
@@ -180,42 +227,74 @@ function loadBook(bookUrl) {
     let doc = contents.document;
 
     // Handle Click Events
-    win.addEventListener("click", function () {
-      window.parent.postMessage({ type: "epub-clicked" }, "*");
-    });
+    // win.addEventListener("click", function () {
+    //   window.parent.postMessage({ type: "epub-clicked" }, "*");
+    // });
 
     // Detect text selection (highlight) with debounce
     doc.addEventListener("selectionchange", function () {
       if (highlightTimeout) clearTimeout(highlightTimeout);
 
       highlightTimeout = setTimeout(() => {
-        let selectedText = win.getSelection().toString().trim();
+        let selection = win.getSelection();
+        let selectedText = selection.toString().trim();
 
-        if (selectedText.length > 0) {
-          isHighlighting = true;
-          selectedTextInput.value = selectedText; // Show text in textarea
-          notePopup.classList.remove("hidden"); // Show note pop-up
-        } else {
+        if (!selectedText) {
           isHighlighting = false;
-          notePopup.classList.add("hidden"); // Hide note pop-up when no text
+          notePopup.classList.add("hidden");
+          return;
         }
+
+        isHighlighting = true;
+        selectedTextInput.value = selectedText;
+
+        // Get the position of the selected text
+        let range = selection.getRangeAt(0);
+        let rect = range.getBoundingClientRect();
+
+        if (rect.width === 0 && rect.height === 0) return;
+
+        // Get the position relative to the main document
+        let iframe = document.querySelector("#area iframe");
+        let iframeRect = iframe.getBoundingClientRect();
+
+        let topPosition = iframeRect.top + rect.top + window.scrollY;
+
+        // Check if there's enough space above, otherwise place below
+        if (topPosition - notePopup.offsetHeight - 10 > 0) {
+          notePopup.style.top = `${
+            topPosition - notePopup.offsetHeight - 10
+          }px`; // Above selection
+        } else {
+          notePopup.style.top = `${topPosition + rect.height + 10}px`; // Below selection
+        }
+
+        notePopup.classList.remove("hidden");
       }, 800);
     });
 
     // Handle Touch Events (for swipes)
     let startX = 0,
       startY = 0;
+
     win.addEventListener("touchstart", function (e) {
-      if (isHighlighting) return; // Ignore swipe if highlighting
+      if (isHighlighting) return;
       if (e.touches.length > 1 || e.touches[0].clientY > 0) {
-        e.preventDefault(); // Prevent scrolling or refresh gesture
+        e.preventDefault();
       }
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
     });
 
+    win.addEventListener("touchmove", function (e) {
+      if (isHighlighting) {
+        e.stopPropagation();
+        return;
+      }
+    });
+
     win.addEventListener("touchend", function (e) {
-      if (isHighlighting) return; // Ignore swipe if highlighting
+      if (isHighlighting) return;
       let endX = e.changedTouches[0].clientX;
       let endY = e.changedTouches[0].clientY;
       let deltaX = endX - startX;
@@ -301,6 +380,8 @@ next.addEventListener("click", function (e) {
     : rendition.next();
   e.preventDefault();
   window.scroll({ top: 0, left: 0, behavior: "smooth" });
+
+  stopSpeech();
 });
 
 prev.addEventListener("click", function (e) {
@@ -309,6 +390,7 @@ prev.addEventListener("click", function (e) {
     : rendition.prev();
   e.preventDefault();
   window.scroll({ top: 0, left: 0, behavior: "smooth" });
+  stopSpeech();
 });
 
 // Keyboard navigation listener
@@ -366,6 +448,7 @@ saveBtn.addEventListener("click", function () {
 
   // Clear input & hide popup
   selectedTextInput.value = "";
+  isHighlighting = false;
   notePopup.classList.add("hidden");
   window.getSelection().removeAllRanges(); // Clear selection
   loadNotes();

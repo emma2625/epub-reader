@@ -9,75 +9,66 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="talkify/dist/styles/talkify-common.css">
+    <link rel="stylesheet" href="talkify/dist/styles/talkify-playlist.css">
 </head>
 
-<body>
+<body class="bg-gray-100">
     
-    <section class="py-10 px-5">
-        <select class="border  w-full border-gray-300 rounded-md py-3 px-4 hidden" id="select"></select>
-        <div class="relative w-full max-w-[90%] m-5 mx-auto">
-            <div class="flex  max-md:flex-col justify-between items-center absolute w-full min-h-full px-5" id="dragarea">
-                <a id="prev"
-                    class="grid relative z-50 cursor-pointer group  active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500">
-                    <span class="hidden md:inline-block">
 
-                        <i class="opacity-10 group-hover:opacity-100 fa-solid  fa-chevron-circle-left text-4xl"></i>
-                    </span>
-                    <span class="visible md:hidden">
-
-                        <i class="opacity-10 group-hover:opacity-100 fa-solid  fa-chevron-circle-up text-4xl"></i>
-                    </span>
+    <section class="py-10 px-5 mt-16">
+        <select class="border w-full border-gray-300 rounded-md py-3 px-4 hidden" id="select"></select>
+        <div class="relative w-full max-w-[90%] mx-auto">
+            <div class="flex max-md:flex-col justify-between items-center absolute w-full min-h-full px-5" id="dragarea">
+                <a id="prev" class="grid relative z-50 cursor-pointer group active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500">
+                    <i class="fa-solid fa-chevron-left text-4xl opacity-10 group-hover:opacity-100"></i>
                 </a>
-                <a id="next"
-                    class="grid relative z-50 cursor-pointer group  active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500">
-                    <span class="hidden md:inline-block">
-
-                        <i class="opacity-10 group-hover:opacity-100 fa-solid  fa-chevron-circle-right text-4xl"></i>
-                    </span>
-                    <span class="visible md:hidden">
-
-                        <i class="opacity-10 group-hover:opacity-100 fa-solid  fa-chevron-circle-down text-4xl"></i>
-                    </span>
+                <a id="next" class="grid relative z-50 cursor-pointer group active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500">
+                    <i class="fa-solid fa-chevron-right text-4xl opacity-10 group-hover:opacity-100"></i>
                 </a>
             </div>
             <div class="relative">
-                <div id="area" class="w-full lg:max-w-2xl mx-auto "></div>
-                <div id="noteSaver" class="absolute hidden w-full max-w-lg  z-50 border border-dotted border-gray-600 rounded-md bg-gray-900/90 text-white p-2">
-                    <p class="border-b border-gray-300 pb-1 mb-2">Save Note</p>
-                    <textarea class="w-full  bg-gray-100/50 rounded p-1" rows="5" id="selectedTextInput"></textarea>
-                    <div class="flex items-center gap-x-5">
-                        <button type="button" id="cancelNoteSaver" class="w-full py-1 px-3 text-center border-red-500  rounded-full bg-red-600">
-                            Cancel
-                        </button>
-                        <button type="button" id="saveNote" class="w-full py-1 px-3 text-center border  rounded-full border-gray-100">
-                            Save
-                        </button>
+                <div id="area" class="w-full lg:max-w-2xl mx-auto bg-white p-5 lg:px-10 shadow-md rounded-lg"></div>
+                <div id="noteSaver" class="absolute hidden w-full max-w-lg z-50 border border-dotted border-gray-600 rounded-md bg-gray-900/90 text-white p-4 shadow-lg">
+                    <p class="border-b border-gray-300 pb-1 mb-2 font-bold">Save Note</p>
+                    <textarea class="w-full bg-gray-100/50 rounded p-2 text-gray-100" rows="5" id="selectedTextInput"></textarea>
+                    <div class="flex items-center gap-x-5 mt-3">
+                        <button type="button" id="cancelNoteSaver" class="w-full py-2 px-4 text-center bg-red-600 text-white rounded-lg">Cancel</button>
+                        <button type="button" id="saveNote" class="w-full py-2 px-4 text-center bg-gray-800 text-white rounded-lg">Save</button>
                     </div>
                 </div>
             </div>
 
-            <div id="controls">
-                <input id="current-percent" size="3" value="0" /> %
-            </div>
+   
         </div>
     </section>
-    <nav class="flex items-start gap-x-5 -translate-x-[24rem] fixed top-0 transition-transform duration-300 z-50" id="mainNav">
-        <aside id="navBody" class="w-full min-w-[23rem] bg-gray-600 text-white rounded-r min-h-screen py-5 px-2 ">
-            <p class="font-bold border-b border-gray-100 pb-1 mb-2">Notes</p>
-            <ul class=" z-[999]">
-                <li class="mb-2">
-                    <button class="hover:bg-orange-500 border-none bg-transparent w-full p-1 text-left"> text 1</button>
-                </li>
-            </ul>
-        </aside>
-        <button id="noteViewToggle" type="button" class="bg-gray-600 py-1 px-2 rounded-lg text-white mt-2 ml-4">
-            <i class="fa-solid fa-bars"></i>
-        </button>
+
+
+    <!-- Navigation -->
+    <nav class="flex justify-end w-full gap-x-5 fixed top-0 left-0  bg-gray-800 p-3  shadow-lg" id="mainNav">
+        <div id="sideBar" class="fixed top-0 left-0 -translate-x-full transition-transform duration-300 z-[9999999999]">
+            <aside id="navBody" class="w-full min-w-[23rem] bg-gray-700 text-white rounded-r-lg min-h-screen py-5 px-4 shadow-lg">
+                <p class="font-bold border-b border-gray-100 pb-1 mb-2">Notes</p>
+                <ul class="space-y-2">
+                    <li>
+                        <button class="hover:bg-orange-500 border-none bg-transparent w-full p-2 text-left text-white">Text 1</button>
+                    </li>
+                </ul>
+            </aside>
+        </div>
+        <div class="flex items-center gap-x-3">
+            <button id="noteViewToggle" type="button" class="bg-gray-600 py-2 px-3 rounded-lg text-white">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <!-- <button id="playAllButton" type="button" class="bg-blue-500 py-2 px-3 rounded-lg text-white">
+                <i class="fa-solid fa-play"></i>
+            </button>
+            <select id="voiceSelect" class="bg-white border px-2 py-1 rounded-md"></select> -->
+        </div>
     </nav>
 
 
-
-
+    <script src="talkify/dist/talkify.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
     <script src="epub/epub.js"></script>
     <script src="script.js"></script>
