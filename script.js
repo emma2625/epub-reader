@@ -12,7 +12,7 @@ const saveBtn = notePopup.querySelector("#saveNote");
 
 // Notes View
 const noteViewToggle = document.getElementById("noteViewToggle");
-const notesSidebar = document.querySelector("aside");
+const notesSidebar = document.querySelector("#mainNav");
 const notesList = notesSidebar.querySelector("ul");
 const notesNav = document.querySelector("#mainNav");
 const notesNavIcon = document.querySelector("#noteViewToggle i");
@@ -40,7 +40,7 @@ let highlightTimeout = null; // For debouncing
 
 // 1️⃣ Toggle Notes View
 noteViewToggle.addEventListener("click", function () {
-  notesSidebar.classList.toggle("-translate-x-full");
+  notesSidebar.classList.toggle("-translate-x-[20rem]");
   notesNavIcon.classList.toggle("fa-bars");
   notesNavIcon.classList.toggle("fa-times");
 });
@@ -52,7 +52,7 @@ document.addEventListener("click", function (event) {
     !notesSidebar.contains(event.target)
   ) {
     // Close the sidebar and reset the icon classes if clicked outside
-    notesSidebar.classList.add("-translate-x-full");
+    notesSidebar.classList.add("-translate-x-[20rem]");
     notesNavIcon.classList.add("fa-bars");
     notesNavIcon.classList.remove("fa-times");
   }
