@@ -7,7 +7,7 @@ const playAllButton = document.querySelector("#playAllButton");
 
 // Talkify
 talkify.config.remoteService.host = "https://talkify.net";
-talkify.config.remoteService.apiKey = "bbedaaab-99fe-4394-b06e-b6901b33f6ea";
+talkify.config.remoteService.apiKey = "";
 
 var player = new talkify.TtsPlayer().enableTextHighlighting();
 var speech;
