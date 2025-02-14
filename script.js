@@ -40,7 +40,7 @@ let highlightTimeout = null; // For debouncing
 
 // 1️⃣ Toggle Notes View
 noteViewToggle.addEventListener("click", function () {
-  notesSidebar.classList.toggle("-translate-x-[20rem]");
+  notesSidebar.classList.toggle("-translate-x-[24rem]");
   notesNavIcon.classList.toggle("fa-bars");
   notesNavIcon.classList.toggle("fa-times");
 });
@@ -52,7 +52,7 @@ document.addEventListener("click", function (event) {
     !notesSidebar.contains(event.target)
   ) {
     // Close the sidebar and reset the icon classes if clicked outside
-    notesSidebar.classList.add("-translate-x-[20rem]");
+    notesSidebar.classList.add("-translate-x-[24rem]");
     notesNavIcon.classList.add("fa-bars");
     notesNavIcon.classList.remove("fa-times");
   }

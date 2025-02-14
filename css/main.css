@@ -667,11 +667,30 @@
   .min-w-\[20rem\] {
     min-width: 20rem;
   }
+  .min-w-\[21rem\] {
+    min-width: 21rem;
+  }
+  .min-w-\[22rem\] {
+    min-width: 22rem;
+  }
+  .min-w-\[23rem\] {
+    min-width: 23rem;
+  }
+  .min-w-\[25rem\] {
+    min-width: 25rem;
+  }
+  .min-w-\[27rem\] {
+    min-width: 27rem;
+  }
   .min-w-\[50rem\] {
     min-width: 50rem;
   }
-  .-translate-x-\[2rem\] {
-    --tw-translate-x: calc(2rem * -1);
+  .-translate-x-\[5rem\] {
+    --tw-translate-x: calc(5rem * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
+  .-translate-x-\[10rem\] {
+    --tw-translate-x: calc(10rem * -1);
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
   .-translate-x-\[19rem\] {
@@ -686,16 +705,36 @@
     --tw-translate-x: calc(3rem * -1);
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
-  .-translate-x-\[5rem\] {
-    --tw-translate-x: calc(5rem * -1);
-    translate: var(--tw-translate-x) var(--tw-translate-y);
-  }
-  .-translate-x-\[10rem\] {
-    --tw-translate-x: calc(10rem * -1);
-    translate: var(--tw-translate-x) var(--tw-translate-y);
-  }
   .-translate-x-\[20rem\] {
     --tw-translate-x: calc(20rem * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
+  .-translate-x-\[21rem\] {
+    --tw-translate-x: calc(21rem * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
+  .-translate-x-\[22rem\] {
+    --tw-translate-x: calc(22rem * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
+  .-translate-x-\[23rem\] {
+    --tw-translate-x: calc(23rem * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
+  .-translate-x-\[24rem\] {
+    --tw-translate-x: calc(24rem * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
+  .-translate-x-\[25rem\] {
+    --tw-translate-x: calc(25rem * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
+  .-translate-x-\[27rem\] {
+    --tw-translate-x: calc(27rem * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
+  .-translate-x-\[2rem\] {
+    --tw-translate-x: calc(2rem * -1);
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
   .-translate-x-\[520em\] {
