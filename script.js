@@ -23,7 +23,7 @@ const mainLoader = document.getElementById("mainLoader");
 let book, rendition;
 let uniquePages = JSON.parse(localStorage.getItem("uniquePages")) || [];
 let allElements = [];
-let selectedBook = "files/lastwords.epub";
+let selectedBook = "files/the-art-of-war.epub";
 let isHighlighting = false;
 let highlightTimeout = null;
 let startX = 0,
