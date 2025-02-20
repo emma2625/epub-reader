@@ -1,7 +1,14 @@
 @media screen and (max-width: 1024px) and (max-device-width: 1024px) {
-    body {
-      overscroll-behavior: none;
-    }
+  body {
+    overscroll-behavior: none;
   }
+}
+
+#area iframe {
+  width: 100%;
+  height: 600px;
+  overflow-x: hidden;
+  white-space: normal; 
+}
 
 @import "tailwindcss";

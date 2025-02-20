@@ -19,11 +19,46 @@ const area = document.getElementById("area");
 const dragarea = document.getElementById("area");
 const mainLoader = document.getElementById("mainLoader");
 
+const settingsToggle = document.getElementById("settingsToggle");
+const settingsDropdown = document.getElementById("settingsDropdown");
+
+const themebuttons = document.querySelectorAll('.theme-button');
+const lightThemeBtn = document.getElementById("lightTheme");
+const sepiaThemeBtn = document.getElementById("sepiaTheme");
+const darkThemeBtn = document.getElementById("darkTheme");
+const themeButtons = document.querySelectorAll(".theme-button");
+
+// Theme configuration
+const themes = {
+  light: {
+    background: "#ffffff",
+    text: "#000000", 
+    links: "#0066cc",
+    border: "#e5e7eb"
+  },
+  sepia: {
+    background: "#f8f3e8",
+    text: "#5f4b32",
+    links: "#9e7e5a",
+    border: "#e8d7c3"
+  },
+  dark: {
+    background: "#1a1a1a",
+    text: "#e6e6e6",
+    links: "#6ba6ff",
+    border: "#4d4d4d"
+  }
+};
+
+
+// Theme state management
+let currentTheme = localStorage.getItem("readerTheme") || "light";
+
 // State Management
 let book, rendition;
 let uniquePages = JSON.parse(localStorage.getItem("uniquePages")) || [];
 let allElements = [];
-let selectedBook = "files/the-art-of-war.epub";
+let selectedBook = "files/hilton-time-and-time-again.epub";
 let isHighlighting = false;
 let highlightTimeout = null;
 let startX = 0,
@@ -41,6 +76,122 @@ let fontSize = parseFloat(localStorage.getItem("epubFontSize")) || 1.5;
 
 // Initialize font size display
 fontSizeDisplay.innerText = fontSize;
+
+
+
+
+
+
+// Function to apply theme to renderer
+function applyTheme(themeName) {
+  if (!themes[themeName]) {
+    console.error(`Theme "${themeName}" not found`);
+    return;
+  }
+  
+  const theme = themes[themeName];
+  currentTheme = themeName;
+  localStorage.setItem("readerTheme", themeName);
+  
+  // Update UI to show active theme
+  themeButtons.forEach(button => {
+    button.classList.remove("ring-2", "ring-orange-500");
+  });
+  
+  document.getElementById(`${themeName}Theme`).classList.add("ring-2", "ring-orange-500");
+  
+  if (rendition) {
+    // Apply theme to epub rendition
+    rendition.themes.default({
+      body: {
+        background: theme.background,
+        color: theme.text
+      },
+      "a": {
+        color: theme.links,
+        "text-decoration": "none"
+      },
+      "p, div, span, h1, h2, h3, h4, h5, h6": {
+        color: theme.text
+      },
+      "img": {
+        "max-width": "100%"
+      },
+      "hr": {
+        border: `1px solid ${theme.border}`
+      }
+    });
+    
+    // Force a redraw if needed
+    rendition.views().forEach(view => {
+      if (view && view.pane) {
+        view.pane.render();
+      }
+    });
+  }
+}
+
+// Initialize theme on page load
+function initializeTheme() {
+  applyTheme(currentTheme);
+}
+
+// Function to position dropdown within viewport
+function positionDropdown() {
+  // Reset any transform for measurement
+  settingsDropdown.style.transform = "translate(0, 0)";
+  
+  // Get dimensions and positions
+  const toggleRect = settingsToggle.getBoundingClientRect();
+  const dropdownRect = settingsDropdown.getBoundingClientRect();
+  const viewportWidth = window.innerWidth;
+  
+  // Calculate if dropdown extends beyond right edge
+  const rightEdge = toggleRect.right;
+  const dropdownWidth = dropdownRect.width;
+  const overflowRight = rightEdge + dropdownWidth - viewportWidth;
+  
+  // Position dropdown to be fully visible
+  if (overflowRight > 0) {
+    // Position dropdown more to the left to keep it in viewport
+    const offset = Math.min(dropdownWidth / 2, overflowRight + 20); // 20px buffer
+    settingsDropdown.style.transform = `translateX(-${offset}px)`;
+  } else {
+    // Reset transform if not needed
+    settingsDropdown.style.transform = "translateX(0)";
+  }
+}
+
+// Toggle settings dropdown when clicking the settings button
+settingsToggle.addEventListener("click", function(e) {
+  e.stopPropagation();
+  settingsDropdown.classList.toggle("hidden");
+  
+  if (!settingsDropdown.classList.contains("hidden")) {
+    positionDropdown();
+  }
+});
+
+// Close dropdown when clicking elsewhere
+document.addEventListener("click", function(e) {
+  if (!settingsToggle.contains(e.target) && !settingsDropdown.contains(e.target)) {
+    settingsDropdown.classList.add("hidden");
+  }
+});
+
+// Reposition on window resize
+window.addEventListener("resize", function() {
+  if (!settingsDropdown.classList.contains("hidden")) {
+    positionDropdown();
+  }
+});
+
+// Prevent dropdown from closing when interacting with content inside it
+settingsDropdown.addEventListener("click", function(e) {
+  e.stopPropagation();
+});
+
+
 
 // Helper Functions
 function trackPage(cfi) {
@@ -221,11 +372,12 @@ function loadBook(bookUrl) {
 
   book = ePub(bookUrl);
   rendition = book.renderTo("area", {
-    flow: "paginated",
+    flow: "scrolled-doc",
     method: "continuous",
     width: "100%",
     height: 600,
     spread: "none",
+    overflow: 'auto'
   });
 
   rendition.display();
@@ -233,6 +385,7 @@ function loadBook(bookUrl) {
   book.ready.then(() => {
     rendition.display();
     mainLoader.classList.add("hidden");
+    applyTheme(currentTheme);
   });
 
   rendition.hooks.content.register((contents) => {
@@ -421,6 +574,14 @@ function getReadProgress() {
   };
 }
 
+
+
+// Event listeners for theme buttons
+lightThemeBtn.addEventListener("click", () => applyTheme("light"));
+sepiaThemeBtn.addEventListener("click", () => applyTheme("sepia"));
+darkThemeBtn.addEventListener("click", () => applyTheme("dark"));
+
+
 // Event Listeners
 increaseFontBtn.addEventListener("click", () => {
   updateFontSize(Math.min(fontSize + FONT_SIZE_STEP, MAX_FONT_SIZE));
@@ -519,3 +680,4 @@ saveBtn.addEventListener("click", function () {
 // Initialize
 loadBook(selectedBook);
 loadNotes();
+document.addEventListener("DOMContentLoaded", initializeTheme);
