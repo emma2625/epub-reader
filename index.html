@@ -16,11 +16,11 @@
 
     <section class="py-10 px-5 mt-16">
         <select class="border w-full border-gray-300 rounded-md py-3 px-4 hidden" id="select"></select>
-        <div class="relative w-full max-w-[90%] mx-auto">
+        <div class="relative w-full  mx-auto">
             <div class="flex max-md:flex-col justify-between items-center absolute w-full min-h-full px-5"
                 id="dragarea">
                 <a id="prev"
-                    class="grid px-3 py-2 relative z-40 cursor-pointer group active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500">
+                    class="grid px-3 py-2 relative z-30  cursor-pointer group active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500">
                     <span class="visible max-md:hidden">
                         <i class="fa-solid fa-chevron-left  text-4xl opacity-10 group-hover:opacity-100"></i>
                     </span>
@@ -30,7 +30,7 @@
                     </span>
                 </a>
                 <a id="next"
-                    class="grid px-3 py-2 relative z-40 cursor-pointer group active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500">
+                    class="grid px-3 py-2 relative z-30  cursor-pointer group active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500">
                     <span class="visible max-md:hidden">
                         <i class="fa-solid fa-chevron-right  text-4xl opacity-10 group-hover:opacity-100"></i>
                     </span>
@@ -50,7 +50,7 @@
                         <img src="images/spinner.gif" alt="loader" class="w-16 h-16">
                     </div>
                 </div>
-                <div id="area" class="w-full lg:max-w-3xl mx-auto bg-white p-5 lg:px-10 shadow-md rounded-lg"></div>
+                <div id="area" class="w-full lg:max-w-3xl mx-auto bg-white p-5 lg:px-10 shadow-xl  rounded-lg overflow-x-hidden"></div>
                 <div id="noteSaver"
                     class="absolute hidden w-full max-w-lg z-50 border border-dotted border-gray-600 rounded-md bg-gray-900/90 text-white p-4 shadow-lg">
                     <p class="border-b border-gray-300 pb-1 mb-2 font-bold">Save Note</p>
@@ -73,7 +73,7 @@
     <!-- Navigation -->
     <nav class="flex justify-end w-full gap-x-5 fixed top-0 left-0 bg-gray-800 p-3 py-2 shadow-lg" id="mainNav">
         <!-- Sidebar for Notes -->
-        <div id="sideBar" class="fixed top-0 left-0 -translate-x-full transition-transform duration-300 z-[9999999999]">
+        <div id="sideBar" class="fixed z-50 top-0 left-0 -translate-x-full transition-transform duration-300 ">
             <aside id="navBody"
                 class="w-full min-w-[23rem] bg-gray-700 text-white rounded-r-lg min-h-screen py-5 px-4 shadow-lg">
                 <p class="font-bold border-b border-gray-100 pb-1 mb-2">Notes</p>
@@ -91,7 +91,7 @@
         <div class="flex items-center gap-x-3">
             <!-- Notes Button -->
             <button id="noteViewToggle" type="button"
-                class="bg-gray-600 hover:bg-gray-500 py-2 px-3 rounded-lg text-white flex items-center gap-x-2">
+                class="hover:bg-gray-500 py-2 px-3 rounded-lg flex items-center gap-x-2">
                 <i class="fa-solid fa-book-open"></i>
                 <span>Notes</span>
             </button>
@@ -99,7 +99,7 @@
             <!-- Settings Dropdown -->
             <div class="relative">
                 <button id="settingsToggle" type="button"
-                    class="bg-gray-600 hover:bg-gray-500 py-2 px-3 rounded-lg text-white flex items-center gap-x-2">
+                    class="hover:bg-gray-500 py-2 px-3 rounded-lg flex items-center gap-x-2">
                     <i class="fa-solid fa-gear"></i>
                     <span>Settings</span>
                 </button>
@@ -111,18 +111,18 @@
                     <h3 class="text-gray-800 font-medium mb-3 border-b pb-2">Font Size</h3>
                     <div class="flex items-center justify-between  mt-3 gap-x-2">
                         <button type="button" id="reduceFont"
-                            class="h-10 w-10 flex items-center justify-center rounded-md bg-gray-100 hover:bg-gray-200 active:bg-orange-500 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
-                            <i class="fa-solid fa-magnifying-glass-minus text-gray-700 text-sm"></i>
+                            class="h-10 w-10 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-200 hover:text-gray-800 active:bg-orange-500 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
+                            <i class="fa-solid fa-magnifying-glass-minus  text-sm"></i>
                         </button>
 
                         <span id="fontSize"
-                            class="h-10 w-14 flex items-center justify-center shadow bg-gray-50 rounded-md  font-mono text-lg select-none tabular-nums">
+                            class="h-10 w-14 flex items-center justify-center shadow border border-gray-200 rounded-md  font-mono text-lg select-none tabular-nums">
                             1
                         </span>
 
                         <button type="button" id="increaseFont"
-                            class="h-10 w-10 flex items-center justify-center rounded-md bg-gray-100 hover:bg-gray-200 active:bg-orange-500 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
-                            <i class="fa-solid fa-magnifying-glass-plus text-gray-700 text-sm"></i>
+                            class="h-10 w-10 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-200 hover:text-gray-800 active:bg-orange-500 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
+                            <i class="fa-solid fa-magnifying-glass-plus  text-sm"></i>
                         </button>
                     </div>
 
@@ -133,19 +133,19 @@
                         <!-- Light Theme Button -->
                         <button id="lightTheme"
                             class="theme-button flex flex-col items-center p-2 rounded-md border border-gray-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors duration-150" data-theme="F7F7F7" data-text="#000000">
-                            <span class="text-sm text-gray-700">Light</span>
+                            <span class="text-sm ">Light</span>
                         </button>
 
                         <!-- Sepia Theme Button -->
                         <button id="sepiaTheme"
                             class="theme-button flex flex-col items-center p-2 rounded-md border border-gray-200 hover:bg-[#f4eacd] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors duration-150" data-theme="f4eacd" data-text="b1956f">
-                            <span class="text-sm text-gray-700 hover:text-[#b1956f]">Sepia</span>
+                            <span class="text-sm  hover:text-[#b1956f]">Sepia</span>
                         </button>
 
                         <!-- Dark Theme Button -->
                         <button id="darkTheme"
                             class="theme-button flex flex-col items-center p-2 rounded-md border border-gray-200 hover:bg-[#1b1f2a] group focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors duration-150" data-theme="1b1f2a" data-text="F7F7F7">
-                            <span class="text-sm text-gray-700 group-hover:text-white ">Dark</span>
+                            <span class="text-sm  group-hover:text-white ">Dark</span>
                         </button>
                     </div>
                 </div>
