@@ -87,7 +87,7 @@ let currentTheme = localStorage.getItem("readerTheme") || "light";
 let book, rendition;
 let uniquePages = JSON.parse(localStorage.getItem("uniquePages")) || [];
 let allElements = [];
-let selectedBook = "files/hilton-time-and-time-again.epub";
+let selectedBook = "files/WCAG.epub";
 let isHighlighting = false;
 let highlightTimeout = null;
 let startX = 0,
