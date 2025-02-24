@@ -87,7 +87,7 @@ let currentTheme = localStorage.getItem("readerTheme") || "light";
 let book, rendition;
 let uniquePages = JSON.parse(localStorage.getItem("uniquePages")) || [];
 let allElements = [];
-let selectedBook = "files/WCAG.epub";
+let selectedBook = "../files/cole-voyage-of-life.epub";
 let isHighlighting = false;
 let highlightTimeout = null;
 let startX = 0,
@@ -830,6 +830,7 @@ function loadBook(bookUrl) {
     // Set initial background colors
     doc.documentElement.style.backgroundColor = themes[currentTheme].background;
     doc.body.style.backgroundColor = themes[currentTheme].background;
+  
 
     // Add a style tag to ensure background color
     const style = doc.createElement("style");
@@ -843,7 +844,9 @@ function loadBook(bookUrl) {
     doc.head.appendChild(style);
 
     const frameWrapper = document.querySelector("#area > div");
+    frameWrapper.style.width = "100%";
     frameWrapper.style.overflowX = "hidden";
+    frameWrapper.style.paddingLeft = "10px"
 
     allElements = doc.querySelector("body").querySelectorAll("*");
     allElements.forEach((el) => {
@@ -1259,8 +1262,8 @@ document.addEventListener('touchstart', (e) => {
   }
 }, { passive: false });
 
-document.addEventListener("contextmenu", (e) => e.preventDefault());
-document.addEventListener("copy", (e) => e.preventDefault());
-document.addEventListener("cut", (e) => e.preventDefault());
-document.addEventListener("dragstart", (e) => e.preventDefault());
-document.addEventListener("drop", (e) => e.preventDefault());
+// document.addEventListener("contextmenu", (e) => e.preventDefault());
+// document.addEventListener("copy", (e) => e.preventDefault());
+// document.addEventListener("cut", (e) => e.preventDefault());
+// document.addEventListener("dragstart", (e) => e.preventDefault());
+// document.addEventListener("drop", (e) => e.preventDefault());
