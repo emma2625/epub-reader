@@ -281,7 +281,36 @@ function applyTheme(themeName) {
       },
     });
 
-    // Force a redraw if needed
+    rendition.views().forEach((view) => {
+      if (view && view.iframe) {
+        const iframeDoc = view.iframe.contentDocument;
+
+        if (iframeDoc) {
+          // Remove any existing theme style tag
+          const existingStyle = iframeDoc.getElementById("theme-background");
+          if (existingStyle) {
+            existingStyle.remove();
+          }
+
+          // Create and add new style tag
+          const style = iframeDoc.createElement("style");
+          style.id = "theme-background";
+          style.textContent = `
+            html, body {
+              background-color: ${theme.background} !important;
+              min-height: 100%;
+            }
+          `;
+          iframeDoc.head.appendChild(style);
+
+          // Also set direct styles
+          iframeDoc.documentElement.style.backgroundColor = theme.background;
+          iframeDoc.body.style.backgroundColor = theme.background;
+        }
+      }
+    });
+
+    // Force a redraw of all views
     rendition.views().forEach((view) => {
       if (view && view.pane) {
         view.pane.render();
@@ -785,6 +814,34 @@ function loadBook(bookUrl) {
     let win = contents.window;
     let doc = contents.document;
 
+    // Add a mutation observer to ensure background color persists
+    const observer = new MutationObserver(() => {
+      doc.documentElement.style.backgroundColor =
+        themes[currentTheme].background;
+      doc.body.style.backgroundColor = themes[currentTheme].background;
+    });
+
+    // Start observing the document for changes
+    observer.observe(doc, {
+      childList: true,
+      subtree: true,
+    });
+
+    // Set initial background colors
+    doc.documentElement.style.backgroundColor = themes[currentTheme].background;
+    doc.body.style.backgroundColor = themes[currentTheme].background;
+
+    // Add a style tag to ensure background color
+    const style = doc.createElement("style");
+    style.id = "theme-background";
+    style.textContent = `
+    html, body {
+      background-color: ${themes[currentTheme].background} !important;
+      min-height: 100%;
+    }
+  `;
+    doc.head.appendChild(style);
+
     const frameWrapper = document.querySelector("#area > div");
     frameWrapper.style.overflowX = "hidden";
 
@@ -810,7 +867,7 @@ function loadBook(bookUrl) {
         settingsDropdown.classList.toggle("hidden");
       }
     });
-    
+
     doc.addEventListener("selectionchange", function () {
       if (highlightTimeout) clearTimeout(highlightTimeout);
 
@@ -888,6 +945,16 @@ function loadBook(bookUrl) {
     setTimeout(() => {
       applyHighlightsToSavedNotes();
     }, 200);
+
+    win.addEventListener("copy", function (e) {
+      e.preventDefault();
+      alert("Copying is disabled in this reader.");
+    });
+    doc.addEventListener("contextmenu", (e) => e.preventDefault());
+    doc.addEventListener("copy", (e) => e.preventDefault());
+    doc.addEventListener("cut", (e) => e.preventDefault());
+    doc.addEventListener("dragstart", (e) => e.preventDefault());
+    doc.addEventListener("drop", (e) => e.preventDefault());
   });
 
   rendition.on("rendered", (section) => {
@@ -996,6 +1063,29 @@ function getReadProgress() {
       .sort((a, b) => b[1].visits - a[1].visits)
       .slice(0, 5),
   };
+}
+
+// Function to detect screenshot attempts
+function detectScreenCapture() {
+  if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+    navigator.mediaDevices.getDisplayMedia({ video: true }).then(() => {
+      // Screenshot attempted
+      handleScreenshotAttempt();
+    }).catch(() => {
+      // Permission denied or cancelled
+    });
+  }
+}
+
+// Function to handle screenshot attempts
+function handleScreenshotAttempt() {
+  // Temporarily blur content
+  document.body.style.filter = 'blur(20px)';
+  setTimeout(() => {
+    document.body.style.filter = 'none';
+  }, 1000);
+  
+  alert('Screenshots are not permitted in this reader');
 }
 
 // Event listeners for theme buttons
@@ -1112,3 +1202,81 @@ window.addEventListener("resize", function () {
   // Small timeout to let resize complete
   setTimeout(initializeTheme, 100);
 });
+window.addEventListener("copy", function (e) {
+  e.preventDefault();
+  alert("Copying is disabled in this reader.");
+});
+
+// Add screenshot protection to the main window
+document.addEventListener('keydown', (e) => {
+  // Detect Mac screenshot shortcuts
+  if (
+    (e.key === '3' || e.key === '4' || e.key === '5') && 
+    ((e.metaKey && e.shiftKey) || (e.ctrlKey && e.shiftKey))
+  ) {
+    e.preventDefault();
+    handleScreenshotAttempt();
+    return false;
+  }
+  
+  // Existing keyboard protection
+  if (
+    (e.ctrlKey || e.metaKey) &&
+    (e.key === 'c' ||
+      e.key === 'C' ||
+      e.key === 'v' ||
+      e.key === 'V' ||
+      e.key === 'p' ||
+      e.key === 'P' ||
+      e.key === 's' ||
+      e.key === 'S' ||
+      e.key === 'a' ||
+      e.key === 'A')
+  ) {
+    e.preventDefault();
+    return false;
+  }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    // User might be attempting to screenshot via app switcher
+    handleScreenshotAttempt();
+  }
+});
+
+// window.addEventListener('blur', () => {
+//   // User might be attempting to screenshot via gestures or assistive touch
+//   handleScreenshotAttempt();
+// });
+
+// Prevent mobile gestures that might trigger screenshots
+document.addEventListener('touchstart', (e) => {
+  if (e.touches.length >= 3) {
+    // Three finger gestures (common for screenshots on some devices)
+    e.preventDefault();
+    handleScreenshotAttempt();
+  }
+}, { passive: false });
+
+document.addEventListener("contextmenu", (e) => e.preventDefault());
+document.addEventListener("copy", (e) => e.preventDefault());
+document.addEventListener("cut", (e) => e.preventDefault());
+document.addEventListener("dragstart", (e) => e.preventDefault());
+document.addEventListener("drop", (e) => e.preventDefault());
+
+window.onload = function () {
+  noScreenshot({
+      disableRightClick: true,
+      disableKeyboardShortcuts: false,
+      disableInspectElement: true,
+      disablePrintScreen: true,
+      disableScreenshot: true,
+      disableFunctionKeys: true,
+      disableCtrlF4: true,
+      mouseLeave: true,
+      ctrlOverlay: true,
+      altOverlay: false,
+      shiftOverlay: false,
+  });
+};
