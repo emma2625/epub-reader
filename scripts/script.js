@@ -1264,19 +1264,3 @@ document.addEventListener("copy", (e) => e.preventDefault());
 document.addEventListener("cut", (e) => e.preventDefault());
 document.addEventListener("dragstart", (e) => e.preventDefault());
 document.addEventListener("drop", (e) => e.preventDefault());
-
-window.onload = function () {
-  noScreenshot({
-      disableRightClick: true,
-      disableKeyboardShortcuts: false,
-      disableInspectElement: true,
-      disablePrintScreen: true,
-      disableScreenshot: true,
-      disableFunctionKeys: true,
-      disableCtrlF4: true,
-      mouseLeave: true,
-      ctrlOverlay: true,
-      altOverlay: false,
-      shiftOverlay: false,
-  });
-};
