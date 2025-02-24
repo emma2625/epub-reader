@@ -87,7 +87,8 @@ let currentTheme = localStorage.getItem("readerTheme") || "light";
 let book, rendition;
 let uniquePages = JSON.parse(localStorage.getItem("uniquePages")) || [];
 let allElements = [];
-let selectedBook = "../files/cole-voyage-of-life.epub";
+let selectedBook =
+  "../files/proposed_SaaS_model_for_NigeriaMRS_Idasuire_Morrison.epub";
 let isHighlighting = false;
 let highlightTimeout = null;
 let startX = 0,
@@ -830,7 +831,6 @@ function loadBook(bookUrl) {
     // Set initial background colors
     doc.documentElement.style.backgroundColor = themes[currentTheme].background;
     doc.body.style.backgroundColor = themes[currentTheme].background;
-  
 
     // Add a style tag to ensure background color
     const style = doc.createElement("style");
@@ -846,7 +846,7 @@ function loadBook(bookUrl) {
     const frameWrapper = document.querySelector("#area > div");
     frameWrapper.style.width = "100%";
     frameWrapper.style.overflowX = "hidden";
-    frameWrapper.style.paddingLeft = "10px"
+    frameWrapper.style.paddingLeft = "10px";
 
     allElements = doc.querySelector("body").querySelectorAll("*");
     allElements.forEach((el) => {
@@ -1071,24 +1071,27 @@ function getReadProgress() {
 // Function to detect screenshot attempts
 function detectScreenCapture() {
   if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
-    navigator.mediaDevices.getDisplayMedia({ video: true }).then(() => {
-      // Screenshot attempted
-      handleScreenshotAttempt();
-    }).catch(() => {
-      // Permission denied or cancelled
-    });
+    navigator.mediaDevices
+      .getDisplayMedia({ video: true })
+      .then(() => {
+        // Screenshot attempted
+        handleScreenshotAttempt();
+      })
+      .catch(() => {
+        // Permission denied or cancelled
+      });
   }
 }
 
 // Function to handle screenshot attempts
 function handleScreenshotAttempt() {
   // Temporarily blur content
-  document.body.style.filter = 'blur(20px)';
+  document.body.style.filter = "blur(20px)";
   setTimeout(() => {
-    document.body.style.filter = 'none';
+    document.body.style.filter = "none";
   }, 1000);
-  
-  alert('Screenshots are not permitted in this reader');
+
+  alert("Screenshots are not permitted in this reader");
 }
 
 // Event listeners for theme buttons
@@ -1211,38 +1214,106 @@ window.addEventListener("copy", function (e) {
 });
 
 // Add screenshot protection to the main window
-document.addEventListener('keydown', (e) => {
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey && e.shiftKey) {
+    e.preventDefault();
+    console.log("Blur triggered");
+
+    let area = document.getElementById("area");
+    console.log(area); // Debugging: Check if area exists
+
+    if (area) {
+      area.style.filter = "blur(20px)";
+    } else {
+      console.warn("Element #area not found!");
+      return;
+    }
+
+    // Create a cancel button if it doesn't already exist
+    let cancelButton = document.getElementById("cancelBlur");
+    if (!cancelButton) {
+      cancelButton = document.createElement("button");
+      cancelButton.id = "cancelBlur";
+      cancelButton.innerText = "You cannot screenshot this page  - Cancel Blur";
+
+      // Ensure the button itself is not blurred
+      cancelButton.style.filter = "none";
+
+      // Apply styles directly using JavaScript
+      cancelButton.style.position = "fixed";
+      cancelButton.style.top = "20%";
+      cancelButton.style.left = "20%";
+      cancelButton.style.padding = "10px 20px";
+      cancelButton.style.fontSize = "16px";
+      cancelButton.style.color = "#fff";
+      cancelButton.style.backgroundColor = "#ef4444"; // Tailwind's red-500
+      cancelButton.style.borderRadius = "6px";
+      cancelButton.style.border = "2px solid black";
+      cancelButton.style.boxShadow = "0px 4px 6px rgba(0, 0, 0, 0.1)";
+      cancelButton.style.cursor = "pointer";
+      cancelButton.style.transition = "all 0.3s ease-in-out";
+      cancelButton.style.zIndex = "9999";
+
+      console.log("Adding cancel button");
+
+      // Append button with a slight delay
+      setTimeout(() => {
+        document.body.appendChild(cancelButton);
+        console.log(cancelButton, "Appended");
+      }, 100); // Delay helps ensure it's attached
+
+      // Remove blur on click
+      cancelButton.addEventListener("click", function () {
+        console.log("Cancel button clicked");
+        if (area) {
+          area.style.filter = "none";
+        }
+        cancelButton.remove();
+      });
+
+      // Add hover effect
+      cancelButton.addEventListener("mouseover", function () {
+        cancelButton.style.backgroundColor = "#dc2626"; // Tailwind's red-600
+      });
+
+      cancelButton.addEventListener("mouseout", function () {
+        cancelButton.style.backgroundColor = "#ef4444"; // Back to red-500
+      });
+    }
+
+    return false;
+  }
   // Detect Mac screenshot shortcuts
   if (
-    (e.key === '3' || e.key === '4' || e.key === '5') && 
+    (e.key === "3" || e.key === "4" || e.key === "5") &&
     ((e.metaKey && e.shiftKey) || (e.ctrlKey && e.shiftKey))
   ) {
     e.preventDefault();
     handleScreenshotAttempt();
     return false;
   }
-  
+
   // Existing keyboard protection
   if (
     (e.ctrlKey || e.metaKey) &&
-    (e.key === 'c' ||
-      e.key === 'C' ||
-      e.key === 'v' ||
-      e.key === 'V' ||
-      e.key === 'p' ||
-      e.key === 'P' ||
-      e.key === 's' ||
-      e.key === 'S' ||
-      e.key === 'a' ||
-      e.key === 'A')
+    (e.key === "c" ||
+      e.key === "C" ||
+      e.key === "v" ||
+      e.key === "V" ||
+      e.key === "p" ||
+      e.key === "P" ||
+      e.key === "s" ||
+      e.key === "S" ||
+      e.key === "a" ||
+      e.key === "A")
   ) {
     e.preventDefault();
     return false;
   }
 });
 
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') {
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
     // User might be attempting to screenshot via app switcher
     handleScreenshotAttempt();
   }
@@ -1254,16 +1325,20 @@ document.addEventListener('visibilitychange', () => {
 // });
 
 // Prevent mobile gestures that might trigger screenshots
-document.addEventListener('touchstart', (e) => {
-  if (e.touches.length >= 3) {
-    // Three finger gestures (common for screenshots on some devices)
-    e.preventDefault();
-    handleScreenshotAttempt();
-  }
-}, { passive: false });
+document.addEventListener(
+  "touchstart",
+  (e) => {
+    if (e.touches.length >= 3) {
+      // Three finger gestures (common for screenshots on some devices)
+      e.preventDefault();
+      handleScreenshotAttempt();
+    }
+  },
+  { passive: false }
+);
 
-// document.addEventListener("contextmenu", (e) => e.preventDefault());
-// document.addEventListener("copy", (e) => e.preventDefault());
-// document.addEventListener("cut", (e) => e.preventDefault());
-// document.addEventListener("dragstart", (e) => e.preventDefault());
-// document.addEventListener("drop", (e) => e.preventDefault());
+document.addEventListener("contextmenu", (e) => e.preventDefault());
+document.addEventListener("copy", (e) => e.preventDefault());
+document.addEventListener("cut", (e) => e.preventDefault());
+document.addEventListener("dragstart", (e) => e.preventDefault());
+document.addEventListener("drop", (e) => e.preventDefault());
