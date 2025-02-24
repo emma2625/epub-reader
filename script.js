@@ -729,6 +729,7 @@ function deleteNote(noteId) {
 }
 
 function handleSwipe(deltaX, deltaY) {
+  return;
   if (isHighlighting) return;
 
   if (Math.abs(deltaX) > Math.abs(deltaY)) {
