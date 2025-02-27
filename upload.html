@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reader - Upload</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body class="bg-gray-100">
+
+
+    <section class="py-10 px-5 mt-16">
+
+        <div class="relative w-full  mx-auto">
+            <!-- Loading Screen -->
+            <div id="mainLoader" class="absolute top-0 left-0 w-full h-full bg-gray-700/20 z-50 rounded-md hidden">
+                <div class="w-full h-full  flex justify-center items-center">
+
+                    <img src="images/spinner.gif" alt="loader" class="w-16 h-16">
+                </div>
+            </div>
+
+            <div id="bookSelector" class="visible flex items-center justify-center p-5 md:p-10">
+
+                <div class="w-full max-w-2xl">
+                    <label for="inputSelectBook" class="border rounded-sm w-full h-72 flex justify-center items-center cursor-pointer">
+
+                        <div class="text-center text-2xl">
+                            <i class="fa-solid fa-book-journal-whills text-5xl"></i>
+                            <p class="my-3">
+                                Select a Book
+                            </p>
+                            <p class="text-xs italic">Format: epub</p>
+                        </div>
+                    </label>
+                    <input type="file" name="" id="inputSelectBook" class="border w-full hidden rounded-md py-3 ">
+                </div>
+            </div>
+
+            <div id="bookViewer" class="hidden">
+                <!-- Prev, Next Btn -->
+                <div class="flex max-md:flex-col justify-between items-center absolute w-full min-h-full px-5"
+                    id="dragarea">
+                    <a id="prev"
+                        class="grid px-3 py-2 relative z-30  cursor-pointer group active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500">
+                        <span class="visible max-md:hidden">
+                            <i class="fa-solid fa-chevron-left  text-4xl opacity-10 group-hover:opacity-100"></i>
+                        </span>
+    
+                        <span class="md:hidden">
+                            <i class="fa-solid fa-chevron-up text-4xl opacity-10 group-hover:opacity-100"></i>
+                        </span>
+                    </a>
+                    <a id="next"
+                        class="grid px-3 py-2 relative z-30  cursor-pointer group active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500">
+                        <span class="visible max-md:hidden">
+                            <i class="fa-solid fa-chevron-right  text-4xl opacity-10 group-hover:opacity-100"></i>
+                        </span>
+    
+                        <span class="md:hidden">
+                            <i class="fa-solid fa-chevron-down text-4xl opacity-10 group-hover:opacity-100"></i>
+                        </span>
+                    </a>
+                </div>
+    
+                <div class="relative">
+    
+    
+                    <!-- Main Render Area -->
+                    <div id="area"
+                        class="w-full lg:max-w-5xl mx-auto bg-white p-5 lg:px-10 shadow-xl  rounded-lg overflow-x-hidden">
+                    </div>
+    
+    
+                    <!-- Note Save UI -->
+                    <div id="noteSaver"
+                        class="absolute hidden w-full max-w-lg z-50 border border-dotted border-gray-600 rounded-md bg-gray-900/90 text-white p-4 shadow-lg">
+                        <p class="border-b border-gray-300 pb-1 mb-2 font-bold">Save Note</p>
+                        <div class="mb-3">
+                            <input type="text"
+                                class="w-full bg-gray-100/50 rounded p-2 text-gray-100 border border-gray-600"
+                                placeholder="Title" id="noteTitle">
+                        </div>
+                        <textarea class="w-full bg-gray-100/50 rounded p-2 text-gray-100" rows="5"
+                            id="selectedTextInput"></textarea>
+                        <div class="flex items-center gap-x-5 mt-3">
+                            <button type="button" id="cancelNoteSaver"
+                                class="w-full py-2 px-4 text-center bg-red-600 text-white rounded-lg">Cancel</button>
+                            <button type="button" id="saveNote"
+                                class="w-full py-2 px-4 text-center bg-gray-600 text-white rounded-lg">Save</button>
+                        </div>
+                    </div>
+                </div>
+    
+    
+                <!-- Navigation -->
+                <nav class="flex justify-end w-full  gap-x-5 fixed z-50 top-0 left-0 bg-gray-800 p-3 py-2 shadow-lg"
+                    id="mainNav">
+                    <!-- Sidebar for Notes -->
+                    <div id="sideBar" class="fixed z-50 top-0 left-0 -translate-x-full transition-transform duration-300 ">
+                        <aside id="navBody"
+                            class="w-full min-w-[23rem] bg-gray-700 text-white rounded-r-lg min-h-screen py-5 px-4 shadow-lg">
+                            <p class="font-bold border-b border-gray-100 pb-1 mb-2">Notes</p>
+                            <ul class="space-y-2">
+                                <li>
+                                    <button
+                                        class="hover:bg-orange-500 border-none bg-transparent w-full p-2 text-left text-white">Text
+                                        1</button>
+                                </li>
+                            </ul>
+                        </aside>
+                    </div>
+                    <div id="sideBarTOC"
+                        class="fixed z-50 top-0 left-0 -translate-x-full transition-transform duration-300 ">
+                        <aside id="navBody"
+                            class="w-full min-w-[23rem] bg-gray-700 text-white rounded-r-lg min-h-screen py-5 px-4 shadow-lg">
+                            <p class="font-bold border-b border-gray-100 pb-1 mb-2">Table of Content</p>
+                            <ul class="space-y-2">
+                                <li>
+                                    <button
+                                        class="hover:bg-orange-500 border-none bg-transparent w-full p-2 text-left text-white">Text
+                                        1</button>
+                                </li>
+                            </ul>
+                        </aside>
+                    </div>
+    
+                    <!-- Navigation Buttons -->
+                    <div class="flex items-center gap-x-3">
+                        <!-- Notes Button -->
+                        <button id="toggleTocSidebar" type="button"
+                            class="hover:bg-gray-500 py-2 px-3 rounded-lg flex items-center gap-x-2">
+                            <i class="fa-solid fa-bookmark"></i>
+                            <span class="hidden md:inline">TOC</span>
+                        </button>
+    
+                        <!-- Notes Button -->
+                        <button id="noteViewToggle" type="button"
+                            class="hover:bg-gray-500 py-2 px-3 rounded-lg flex items-center gap-x-2">
+                            <i class="fa-solid fa-book-open"></i>
+                            <span class="hidden md:inline">Notes</span>
+                        </button>
+    
+                        <!-- Settings Dropdown -->
+                        <div class="relative">
+                            <button id="settingsToggle" type="button"
+                                class="hover:bg-gray-500 py-2 px-3 rounded-lg flex items-center gap-x-2">
+                                <i class="fa-solid fa-gear"></i>
+                                <span class="hidden md:inline">Settings</span>
+                            </button>
+    
+                            <!-- Dropdown Content -->
+                            <div id="settingsDropdown"
+                                class="absolute right-0 transform -translate-x-1/4 mt-2 w-50 bg-white rounded-lg shadow-lg p-4 hidden z-50">
+                                <!-- Font Size Controls -->
+                                <h3 class="text-gray-800 font-medium mb-3 border-b pb-2">Font Size</h3>
+                                <div class="flex items-center justify-between  mt-3 gap-x-2">
+                                    <button type="button" id="reduceFont"
+                                        class="h-10 w-10 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-200 hover:text-gray-800 active:bg-orange-500 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
+                                        <i class="fa-solid fa-magnifying-glass-minus  text-sm"></i>
+                                    </button>
+    
+                                    <span id="fontSize"
+                                        class="h-10 w-14 flex items-center justify-center shadow border border-gray-200 rounded-md  font-mono text-lg select-none tabular-nums">
+                                        1
+                                    </span>
+    
+                                    <button type="button" id="increaseFont"
+                                        class="h-10 w-10 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-200 hover:text-gray-800 active:bg-orange-500 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
+                                        <i class="fa-solid fa-magnifying-glass-plus  text-sm"></i>
+                                    </button>
+                                </div>
+    
+                                <!-- Theme Controls -->
+                                <h3 class="text-gray-800 font-medium border-b pb-2 mt-3">Theme</h3>
+                                <br>
+                                <div class="flex items-center gap-x-3 pt-4">
+                                    <!-- Light Theme Button -->
+                                    <button id="lightTheme"
+                                        class="theme-button flex flex-col items-center p-2 rounded-md border border-gray-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors duration-150"
+                                        data-theme="F7F7F7" data-text="#000000">
+                                        <span class="text-sm ">Light</span>
+                                    </button>
+    
+                                    <!-- Sepia Theme Button -->
+                                    <button id="sepiaTheme"
+                                        class="theme-button flex flex-col items-center p-2 rounded-md border border-gray-200 hover:bg-[#f4eacd] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors duration-150"
+                                        data-theme="f4eacd" data-text="b1956f">
+                                        <span class="text-sm  hover:text-[#b1956f]">Sepia</span>
+                                    </button>
+    
+                                    <!-- Dark Theme Button -->
+                                    <button id="darkTheme"
+                                        class="theme-button flex flex-col items-center p-2 rounded-md border border-gray-200 hover:bg-[#1b1f2a] group focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors duration-150"
+                                        data-theme="1b1f2a" data-text="F7F7F7">
+                                        <span class="text-sm  group-hover:text-white ">Dark</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </section>
+
+
+
+    <script src="scripts/jszip.min.js"></script>
+    <script src="scripts/epub/epub.js"></script>
+    <script src="scripts/upload.js"></script>
+</body>
+
+</html>
