@@ -855,7 +855,7 @@ function loadToc(book, container) {
         // Set button attributes and content
         button.className =
           "hover:bg-orange-500 border-none bg-transparent w-full p-2 text-left text-white";
-        button.textContent = chapter.label;
+        button.textContent = chapter.label.length >= 30 ? chapter.label.slice(0,30) : chapter.label;
 
         // Add click event to navigate to chapter
         button.addEventListener("click", () => {

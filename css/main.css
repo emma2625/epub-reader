@@ -661,9 +661,6 @@
   .h-3 {
     height: calc(var(--spacing) * 3);
   }
-  .h-7 {
-    height: calc(var(--spacing) * 7);
-  }
   .h-10 {
     height: calc(var(--spacing) * 10);
   }
@@ -702,6 +699,9 @@
   }
   .max-w-2xl {
     max-width: var(--container-2xl);
+  }
+  .max-w-\[23rem\] {
+    max-width: 23rem;
   }
   .max-w-lg {
     max-width: var(--container-lg);
@@ -773,6 +773,12 @@
   }
   .overflow-x-hidden {
     overflow-x: hidden;
+  }
+  .overflow-y-auto {
+    overflow-y: auto;
+  }
+  .overflow-y-scroll {
+    overflow-y: scroll;
   }
   .rounded {
     border-radius: 0.25rem;
@@ -913,9 +919,6 @@
   }
   .text-left {
     text-align: left;
-  }
-  .text-start {
-    text-align: start;
   }
   .font-mono {
     font-family: var(--font-mono);
