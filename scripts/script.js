@@ -7,10 +7,13 @@ const reduceFontBtn = document.getElementById("reduceFont");
 const increaseFontBtn = document.getElementById("increaseFont");
 const fontSizeDisplay = document.getElementById("fontSize");
 const notePopup = document.querySelector("#noteSaver");
+const noteTitle = document.getElementById("noteTitle");
 const selectedTextInput = document.getElementById("selectedTextInput");
 const cancelBtn = notePopup.querySelector("#cancelNoteSaver");
 const saveBtn = notePopup.querySelector("#saveNote");
 const noteViewToggle = document.getElementById("noteViewToggle");
+const toggleTocSidebar = document.getElementById("toggleTocSidebar");
+const tocSideBar = document.getElementById("sideBarTOC");
 const notesSidebar = document.querySelector("#mainNav #sideBar");
 const notesList = notesSidebar.querySelector("ul");
 const notesNav = document.querySelector("#mainNav");
@@ -87,8 +90,7 @@ let currentTheme = localStorage.getItem("readerTheme") || "light";
 let book, rendition;
 let uniquePages = JSON.parse(localStorage.getItem("uniquePages")) || [];
 let allElements = [];
-let selectedBook =
-  "../files/proposed_SaaS_model_for_NigeriaMRS_Idasuire_Morrison.epub";
+let selectedBook = "../files/lesson-plan.epub";
 let isHighlighting = false;
 let highlightTimeout = null;
 let startX = 0,
@@ -190,6 +192,23 @@ function applyTheme(themeName) {
     }
   }
 
+  if (tocSideBar) {
+    const navBody = tocSideBar.querySelector("#navBody");
+    if (navBody) {
+      navBody.style.backgroundColor = theme.noteBg;
+      navBody.style.color = theme.text;
+      navBody.style.boxShadow = `2px 0 15px ${theme.shadow}`;
+
+      // Style all elements inside sidebar
+      const sidebarElements = navBody.querySelectorAll("*");
+      sidebarElements.forEach((el) => {
+        if (el.tagName === "BUTTON") {
+          el.style.color = theme.text;
+        }
+      });
+    }
+  }
+
   // ===== NOTE POPUP STYLING =====
   if (notePopup) {
     notePopup.style.backgroundColor = theme.noteBg;
@@ -203,6 +222,13 @@ function applyTheme(themeName) {
       textarea.style.backgroundColor = theme.inputBg;
       textarea.style.color = theme.text;
       textarea.style.borderColor = theme.border;
+    }
+
+    const input = notePopup.querySelector("input");
+    if (input) {
+      input.style.backgroundColor = theme.inputBg;
+      input.style.color = theme.text;
+      input.style.borderColor = theme.border;
     }
   }
 
@@ -676,54 +702,6 @@ function getReadingStats() {
   return stats;
 }
 
-function loadNotes() {
-  notesList.innerHTML = "";
-  const notes = JSON.parse(localStorage.getItem("notes")) || [];
-  notes.forEach((note) => {
-    const li = document.createElement("li");
-    li.classList.add("mb-2", "flex", "justify-between", "items-center");
-
-    const noteBtn = document.createElement("button");
-    noteBtn.classList.add(
-      "hover:bg-orange-500",
-      "border-none",
-      "bg-transparent",
-      "w-full",
-      "p-1",
-      "text-left"
-    );
-    noteBtn.textContent = note.text.substring(0, 30) + "...";
-
-    noteBtn.addEventListener("click", function () {
-      if (rendition) {
-        rendition.display(note.page);
-      }
-      notesSidebar.classList.toggle("-translate-x-full");
-      notesNavIcon.classList.toggle("fa-bars");
-      notesNavIcon.classList.toggle("fa-times");
-    });
-
-    const deleteBtn = document.createElement("button");
-    deleteBtn.classList.add(
-      "bg-red-500",
-      "text-white",
-      "rounded",
-      "px-2",
-      "py-1",
-      "ml-2"
-    );
-    deleteBtn.innerHTML = `<i class="fa-solid fa-trash-alt text-white text-sm"></i>`;
-
-    deleteBtn.addEventListener("click", function () {
-      deleteNote(note.id);
-    });
-
-    li.appendChild(noteBtn);
-    li.appendChild(deleteBtn);
-    notesList.appendChild(li);
-  });
-}
-
 function deleteNote(noteId) {
   let notes = JSON.parse(localStorage.getItem("notes")) || [];
 
@@ -788,6 +766,176 @@ function handleSwipe(deltaX, deltaY) {
   window.scroll({ top: 0, left: 0, behavior: "smooth" });
 }
 
+function loadNotes() {
+  notesList.innerHTML = "";
+  const notes = JSON.parse(localStorage.getItem("notes")) || [];
+  notes.forEach((note) => {
+    const li = document.createElement("li");
+    li.classList.add("mb-2", "flex", "justify-between", "items-center");
+
+    const noteBtn = document.createElement("button");
+    noteBtn.classList.add(
+      "hover:bg-orange-500",
+      "border-none",
+      "bg-transparent",
+      "w-full",
+      "p-1",
+      "text-left"
+    );
+    noteBtn.textContent =
+      note.title.length >= 30
+        ? note.title.substring(0, 30) + "..."
+        : note.title;
+
+    noteBtn.addEventListener("click", function () {
+      if (rendition) {
+        rendition.display(note.page);
+      }
+      notesSidebar.classList.toggle("-translate-x-full");
+      notesNavIcon.classList.toggle("fa-bars");
+      notesNavIcon.classList.toggle("fa-times");
+    });
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.classList.add(
+      "bg-red-500",
+      "text-white",
+      "rounded",
+      "px-2",
+      "py-1",
+      "ml-2"
+    );
+    deleteBtn.innerHTML = `<i class="fa-solid fa-trash-alt text-white text-sm"></i>`;
+
+    deleteBtn.addEventListener("click", function () {
+      deleteNote(note.id);
+    });
+
+    li.appendChild(noteBtn);
+    li.appendChild(deleteBtn);
+    notesList.appendChild(li);
+  });
+}
+
+function loadToc(book, container) {
+  // Get the tocList element from the container
+  const tocList = container.querySelector("ul");
+
+  // Clear any existing content
+  tocList.innerHTML = "";
+
+  // Show loading indicator if needed
+  const loadingItem = document.createElement("li");
+  loadingItem.textContent = "Loading table of contents...";
+  tocList.appendChild(loadingItem);
+
+  // Get the table of contents from the book
+  book.loaded.navigation
+    .then((nav) => {
+      // Clear loading indicator
+      tocList.innerHTML = "";
+
+      if (!nav.toc || nav.toc.length === 0) {
+        const emptyItem = document.createElement("li");
+        emptyItem.textContent = "No table of contents available";
+        tocList.appendChild(emptyItem);
+        return;
+      }
+
+      // Loop through TOC items and create list elements
+      nav.toc.forEach((chapter) => {
+        const li = document.createElement("li");
+        const button = document.createElement("button");
+
+        // Set button attributes and content
+        button.className =
+          "hover:bg-orange-500 border-none bg-transparent w-full p-2 text-left text-white";
+        button.textContent = chapter.label;
+
+        // Add click event to navigate to chapter
+        button.addEventListener("click", () => {
+          // Show loader while navigating
+          mainLoader.classList.remove("hidden");
+
+          // Navigate to the chapter
+          rendition.display(chapter.href).then(() => {
+            // Hide loader after navigation completes
+            setTimeout(() => {
+              mainLoader.classList.add("hidden");
+            }, 300);
+
+            // Apply current theme to new content
+            applyTheme(currentTheme);
+
+            // Apply highlights to saved notes
+            setTimeout(() => {
+              applyHighlightsToSavedNotes();
+            }, 200);
+          });
+
+          // Close the sidebar after selection
+          tocSideBar.classList.remove("translate-x-0");
+          tocSideBar.classList.add("-translate-x-full");
+        });
+
+        li.appendChild(button);
+        tocList.appendChild(li);
+
+        // Handle nested TOC items if they exist
+        if (chapter.subitems && chapter.subitems.length > 0) {
+          const nestedUl = document.createElement("ul");
+          nestedUl.className = "pl-4 space-y-1 mt-1";
+
+          chapter.subitems.forEach((subitem) => {
+            const subLi = document.createElement("li");
+            const subButton = document.createElement("button");
+
+            subButton.className =
+              "hover:bg-orange-500 border-none bg-transparent w-full p-2 text-left text-white text-sm";
+            subButton.textContent = subitem.label;
+
+            subButton.addEventListener("click", () => {
+              // Show loader while navigating
+              mainLoader.classList.remove("hidden");
+
+              // Navigate to the subitem
+              rendition.display(subitem.href).then(() => {
+                // Hide loader after navigation completes
+                setTimeout(() => {
+                  mainLoader.classList.add("hidden");
+                }, 300);
+
+                // Apply current theme to new content
+                applyTheme(currentTheme);
+
+                // Apply highlights to saved notes
+                setTimeout(() => {
+                  applyHighlightsToSavedNotes();
+                }, 200);
+              });
+
+              // Close the sidebar after selection
+              tocSideBar.classList.remove("translate-x-0");
+              tocSideBar.classList.add("-translate-x-full");
+            });
+
+            subLi.appendChild(subButton);
+            nestedUl.appendChild(subLi);
+          });
+
+          li.appendChild(nestedUl);
+        }
+      });
+    })
+    .catch((error) => {
+      console.error("Error loading TOC:", error);
+      tocList.innerHTML = "";
+      const errorItem = document.createElement("li");
+      errorItem.textContent = "Failed to load table of contents";
+      tocList.appendChild(errorItem);
+    });
+}
+
 function loadBook(bookUrl) {
   area.innerHTML = "";
 
@@ -809,6 +957,7 @@ function loadBook(bookUrl) {
     rendition.display();
     mainLoader.classList.add("hidden");
     applyTheme(currentTheme);
+    loadToc(book, tocSideBar);
   });
 
   rendition.hooks.content.register((contents) => {
@@ -886,8 +1035,8 @@ function loadBook(bookUrl) {
         }
 
         isHighlighting = true;
-        selectedTextInput.value = selectedText;
 
+        selectedTextInput.value = selectedText;
         let range = selection.getRangeAt(0);
         let rect = range.getBoundingClientRect();
 
@@ -906,6 +1055,7 @@ function loadBook(bookUrl) {
         }
 
         notePopup.classList.remove("hidden");
+        setTimeout(() => noteTitle.focus(), 100);
       }, 800);
     });
 
@@ -1112,6 +1262,14 @@ noteViewToggle.addEventListener("click", function () {
   notesSidebar.classList.toggle("-translate-x-full");
   notesNavIcon.classList.toggle("fa-bars");
   notesNavIcon.classList.toggle("fa-times");
+
+  if (
+    !tocSideBar.classList.contains("-translate-x-full") &&
+    tocSideBar.classList.contains("translate-x-0")
+  ) {
+    tocSideBar.classList.toggle("-translate-x-full");
+    tocSideBar.classList.toggle("translate-x-0");
+  }
 });
 
 document.addEventListener("click", function (event) {
@@ -1122,6 +1280,12 @@ document.addEventListener("click", function (event) {
     notesSidebar.classList.add("-translate-x-full");
     notesNavIcon.classList.add("fa-bars");
     notesNavIcon.classList.remove("fa-times");
+  }
+  if (
+    !toggleTocSidebar.contains(event.target) &&
+    !tocSideBar.contains(event.target)
+  ) {
+    tocSideBar.classList.add("-translate-x-full");
   }
 });
 
@@ -1167,7 +1331,12 @@ cancelBtn.addEventListener("click", function () {
 
 saveBtn.addEventListener("click", function () {
   const highlightedText = selectedTextInput.value.trim();
+  const title = noteTitle.value.trim();
   if (!highlightedText) return;
+  if (!title) {
+    alert("Enter a title");
+    return;
+  }
 
   const bookTitle = book?.package?.metadata?.title || "Unknown Book";
   const bookId = book?.package?.metadata?.identifier || "unknown_id";
@@ -1177,6 +1346,7 @@ saveBtn.addEventListener("click", function () {
 
   const newNote = {
     id: Date.now(),
+    title: title,
     book: bookTitle,
     text: highlightedText,
     page: cfi,
@@ -1342,3 +1512,14 @@ document.addEventListener("copy", (e) => e.preventDefault());
 document.addEventListener("cut", (e) => e.preventDefault());
 document.addEventListener("dragstart", (e) => e.preventDefault());
 document.addEventListener("drop", (e) => e.preventDefault());
+
+toggleTocSidebar.addEventListener("click", function () {
+  tocSideBar.classList.toggle("-translate-x-full");
+  tocSideBar.classList.toggle("translate-x-0");
+
+  if (!notesSidebar.classList.contains("-translate-x-full")) {
+    notesSidebar.classList.toggle("-translate-x-full");
+    notesNavIcon.classList.toggle("fa-bars");
+    notesNavIcon.classList.toggle("fa-times");
+  }
+});

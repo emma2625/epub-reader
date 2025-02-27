@@ -59,6 +59,9 @@
                 <div id="noteSaver"
                     class="absolute hidden w-full max-w-lg z-50 border border-dotted border-gray-600 rounded-md bg-gray-900/90 text-white p-4 shadow-lg">
                     <p class="border-b border-gray-300 pb-1 mb-2 font-bold">Save Note</p>
+                    <div class="mb-3">
+                        <input type="text" class="w-full bg-gray-100/50 rounded p-2 text-gray-100 border border-gray-600" placeholder="Title" id="noteTitle">
+                    </div>
                     <textarea class="w-full bg-gray-100/50 rounded p-2 text-gray-100" rows="5"
                         id="selectedTextInput"></textarea>
                     <div class="flex items-center gap-x-5 mt-3">
@@ -87,9 +90,29 @@
                         </ul>
                     </aside>
                 </div>
+                <div id="sideBarTOC" class="fixed z-50 top-0 left-0 -translate-x-full transition-transform duration-300 ">
+                    <aside id="navBody"
+                        class="w-full min-w-[23rem] bg-gray-700 text-white rounded-r-lg min-h-screen py-5 px-4 shadow-lg">
+                        <p class="font-bold border-b border-gray-100 pb-1 mb-2">Table of Content</p>
+                        <ul class="space-y-2">
+                            <li>
+                                <button
+                                    class="hover:bg-orange-500 border-none bg-transparent w-full p-2 text-left text-white">Text
+                                    1</button>
+                            </li>
+                        </ul>
+                    </aside>
+                </div>
         
                 <!-- Navigation Buttons -->
                 <div class="flex items-center gap-x-3">
+                    <!-- Notes Button -->
+                    <button id="toggleTocSidebar" type="button"
+                        class="hover:bg-gray-500 py-2 px-3 rounded-lg flex items-center gap-x-2">
+                        <i class="fa-solid fa-bookmark"></i>
+                        <span>TOC</span>
+                    </button>
+        
                     <!-- Notes Button -->
                     <button id="noteViewToggle" type="button"
                         class="hover:bg-gray-500 py-2 px-3 rounded-lg flex items-center gap-x-2">
