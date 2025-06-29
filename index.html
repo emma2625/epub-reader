@@ -4,186 +4,788 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reader</title>
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
-        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>Modern EPUB Reader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .epub-container {
+            height: calc(100vh - 120px);
+        }
+
+        .sidebar-scroll {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .highlight-yellow {
+            background: linear-gradient(104deg, rgba(251, 191, 36, 0.3) 0.9%, rgba(251, 191, 36, 0.7) 2.4%, rgba(251, 191, 36, 0.3) 5.8%, rgba(251, 191, 36, 0.1) 93%, rgba(251, 191, 36, 0.7) 96%, rgba(251, 191, 36, 0) 98%);
+            box-decoration-break: clone;
+        }
+
+        .highlight-blue {
+            background: linear-gradient(104deg, rgba(59, 130, 246, 0.3) 0.9%, rgba(59, 130, 246, 0.7) 2.4%, rgba(59, 130, 246, 0.3) 5.8%, rgba(59, 130, 246, 0.1) 93%, rgba(59, 130, 246, 0.7) 96%, rgba(59, 130, 246, 0) 98%);
+            box-decoration-break: clone;
+        }
+
+        .highlight-green {
+            background: linear-gradient(104deg, rgba(34, 197, 94, 0.3) 0.9%, rgba(34, 197, 94, 0.7) 2.4%, rgba(34, 197, 94, 0.3) 5.8%, rgba(34, 197, 94, 0.1) 93%, rgba(34, 197, 94, 0.7) 96%, rgba(34, 197, 94, 0) 98%);
+            box-decoration-break: clone;
+        }
+
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dark .glassmorphism {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slider-thumb::-webkit-slider-thumb {
+            appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #4f46e5;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .slider-thumb::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #4f46e5;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+    </style>
 </head>
 
-<body class="bg-gray-100">
+<body
+    class="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
+    <!-- Loading Screen -->
+    <div id="loading" class="fixed inset-0 bg-white dark:bg-gray-900 flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p class="text-gray-600 dark:text-gray-300 font-medium">Loading your book...</p>
+        </div>
+    </div>
 
+    <!-- Header -->
+    <header
+        class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between sticky top-0 z-40">
+        <div class="flex items-center space-x-4">
+            <button id="menuBtn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <svg class="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                    </path>
+                </svg>
+            </button>
+            <h1 id="bookTitle" class="text-xl font-semibold text-gray-800 dark:text-white truncate max-w-xs"></h1>
+        </div>
 
-    <section class="py-10 px-5 mt-16">
-        <select class="border w-full border-gray-300 rounded-md py-3 px-4 hidden" id="select"></select>
-        <div class="relative w-full  mx-auto">
-            <!-- Prev, Next Btn -->
-            <div class="flex max-md:flex-col justify-between items-center absolute w-full min-h-full px-5"
-                id="dragarea">
-                <a id="prev"
-                    class="grid px-3 py-2 relative z-30  cursor-pointer group active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500">
-                    <span class="visible max-md:hidden">
-                        <i class="fa-solid fa-chevron-left  text-4xl opacity-10 group-hover:opacity-100"></i>
-                    </span>
+        <div class="flex items-center space-x-2">
+            <button id="searchBtn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </button>
+            <button id="settingsBtn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                    </path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+            </button>
+            <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <svg class="w-5 h-5 text-gray-700 dark:text-gray-300 hidden dark:block" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
+                    </path>
+                </svg>
+                <svg class="w-5 h-5 text-gray-700 dark:text-gray-300 block dark:hidden" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z">
+                    </path>
+                </svg>
+            </button>
+        </div>
+    </header>
 
-                    <span class="md:hidden">
-                        <i class="fa-solid fa-chevron-up text-4xl opacity-10 group-hover:opacity-100"></i>
-                    </span>
-                </a>
-                <a id="next"
-                    class="grid px-3 py-2 relative z-30  cursor-pointer group active:shadow-md rounded-full active:shadow-orange-600 place-content-center hover:text-orange-500">
-                    <span class="visible max-md:hidden">
-                        <i class="fa-solid fa-chevron-right  text-4xl opacity-10 group-hover:opacity-100"></i>
-                    </span>
-
-                    <span class="md:hidden">
-                        <i class="fa-solid fa-chevron-down text-4xl opacity-10 group-hover:opacity-100"></i>
-                    </span>
-                </a>
-            </div>
-
-            <div class="relative">
-                <!-- Loading Screen -->
-                <div id="mainLoader" class="absolute top-0 left-0 w-full h-full bg-gray-700/20 z-50 rounded-md hidden">
-                    <div class="w-full h-full  flex justify-center items-center">
-
-                        <img src="images/spinner.gif" alt="loader" class="w-16 h-16">
-                    </div>
-                </div>
-
-                <!-- Main Render Area -->
-                <div id="area" class="w-full lg:max-w-5xl mx-auto bg-white p-5 lg:px-10 shadow-xl  rounded-lg overflow-x-hidden"></div>
-
-
-                <!-- Note Save UI -->
-                <div id="noteSaver"
-                    class="absolute hidden w-full max-w-lg z-50 border border-dotted border-gray-600 rounded-md bg-gray-900/90 text-white p-4 shadow-lg">
-                    <p class="border-b border-gray-300 pb-1 mb-2 font-bold">Save Note</p>
-                    <div class="mb-3">
-                        <input type="text" class="w-full bg-gray-100/50 rounded p-2 text-gray-100 border border-gray-600" placeholder="Title" id="noteTitle">
-                    </div>
-                    <textarea class="w-full bg-gray-100/50 rounded p-2 text-gray-100" rows="5"
-                        id="selectedTextInput"></textarea>
-                    <div class="flex items-center gap-x-5 mt-3">
-                        <button type="button" id="cancelNoteSaver"
-                            class="w-full py-2 px-4 text-center bg-red-600 text-white rounded-lg">Cancel</button>
-                        <button type="button" id="saveNote"
-                            class="w-full py-2 px-4 text-center bg-gray-600 text-white rounded-lg">Save</button>
-                    </div>
-                </div>
-            </div>
-
-
-            <!-- Navigation -->
-            <nav class="flex justify-end w-full  gap-x-5 fixed z-50 top-0 left-0 bg-gray-800 p-3 py-2 shadow-lg" id="mainNav">
-                <!-- Sidebar for Notes -->
-                <div id="sideBar" class="fixed z-50 top-0 left-0 -translate-x-full transition-transform duration-300 ">
-                    <aside id="navBody"
-                        class="w-full min-w-[23rem] max-w-[23rem] bg-gray-700 text-white rounded-r-lg min-h-screen py-5 px-4 shadow-lg">
-                        <p class="font-bold border-b border-gray-100 pb-1 mb-2">Notes</p>
-                        <ul class="space-y-2 overflow-y-auto h-full">
-                            <li>
-                                <button
-                                    class="hover:bg-orange-500 border-none bg-transparent w-full p-2 text-left text-white">Text
-                                    1</button>
-                            </li>
-                        </ul>
-                    </aside>
-                </div>
-                <div id="sideBarTOC" class="fixed z-50 top-0 left-0 -translate-x-full transition-transform duration-300 ">
-                    <aside id="navBody"
-                        class="w-full min-w-[23rem] max-w-[23rem] bg-gray-700 text-white rounded-r-lg min-h-screen py-5 px-4 shadow-lg">
-                        <p class="font-bold border-b border-gray-100 pb-1 mb-2">Table of Content</p>
-                        <ul class="space-y-2 overflow-y-auto h-full">
-                            <li>
-                                <button
-                                    class="hover:bg-orange-500 border-none bg-transparent w-full p-2 text-left text-white">Text
-                                    1</button>
-                            </li>
-                        </ul>
-                    </aside>
-                </div>
-        
-                <!-- Navigation Buttons -->
-                <div class="flex items-center gap-x-3">
-                    <!-- Notes Button -->
-                    <button id="toggleTocSidebar" type="button"
-                        class="hover:bg-gray-500 py-2 px-3 rounded-lg flex items-center gap-x-2">
-                        <i class="fa-solid fa-bookmark"></i>
-                        <span class="hidden md:inline">TOC</span>
-                    </button>
-        
-                    <!-- Notes Button -->
-                    <button id="noteViewToggle" type="button"
-                        class="hover:bg-gray-500 py-2 px-3 rounded-lg flex items-center gap-x-2">
-                        <i class="fa-solid fa-book-open"></i>
-                        <span class="hidden md:inline">Notes</span>
-                    </button>
-        
-                    <!-- Settings Dropdown -->
-                    <div class="relative">
-                        <button id="settingsToggle" type="button"
-                            class="hover:bg-gray-500 py-2 px-3 rounded-lg flex items-center gap-x-2">
-                            <i class="fa-solid fa-gear"></i>
-                            <span class="hidden md:inline">Settings</span>
+    <!-- Main Container -->
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div id="sidebar"
+            class="fixed inset-y-0 left-0 z-30 w-80 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transform -translate-x-full transition-transform duration-300 ease-in-out">
+            <div class="flex flex-col h-full">
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Contents</h2>
+                        <button id="closeSidebar" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
+                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
                         </button>
-        
-                        <!-- Dropdown Content -->
-                        <div id="settingsDropdown"
-                            class="absolute right-0 transform -translate-x-1/4 mt-2 w-50 bg-white rounded-lg shadow-lg p-4 hidden z-50">
-                            <!-- Font Size Controls -->
-                            <h3 class="text-gray-800 font-medium mb-3 border-b pb-2">Font Size</h3>
-                            <div class="flex items-center justify-between  mt-3 gap-x-2">
-                                <button type="button" id="reduceFont"
-                                    class="h-10 w-10 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-200 hover:text-gray-800 active:bg-orange-500 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
-                                    <i class="fa-solid fa-magnifying-glass-minus  text-sm"></i>
-                                </button>
-        
-                                <span id="fontSize"
-                                    class="h-10 w-14 flex items-center justify-center shadow border border-gray-200 rounded-md  font-mono text-lg select-none tabular-nums">
-                                    1
-                                </span>
-        
-                                <button type="button" id="increaseFont"
-                                    class="h-10 w-10 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-200 hover:text-gray-800 active:bg-orange-500 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
-                                    <i class="fa-solid fa-magnifying-glass-plus  text-sm"></i>
-                                </button>
-                            </div>
-        
-                            <!-- Theme Controls -->
-                            <h3 class="text-gray-800 font-medium border-b pb-2 mt-3">Theme</h3>
-                            <br>
-                            <div class="flex items-center gap-x-3 pt-4">
-                                <!-- Light Theme Button -->
-                                <button id="lightTheme"
-                                    class="theme-button flex flex-col items-center p-2 rounded-md border border-gray-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors duration-150" data-theme="F7F7F7" data-text="#000000">
-                                    <span class="text-sm ">Light</span>
-                                </button>
-        
-                                <!-- Sepia Theme Button -->
-                                <button id="sepiaTheme"
-                                    class="theme-button flex flex-col items-center p-2 rounded-md border border-gray-200 hover:bg-[#f4eacd] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors duration-150" data-theme="f4eacd" data-text="b1956f">
-                                    <span class="text-sm  hover:text-[#b1956f]">Sepia</span>
-                                </button>
-        
-                                <!-- Dark Theme Button -->
-                                <button id="darkTheme"
-                                    class="theme-button flex flex-col items-center p-2 rounded-md border border-gray-200 hover:bg-[#1b1f2a] group focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors duration-150" data-theme="1b1f2a" data-text="F7F7F7">
-                                    <span class="text-sm  group-hover:text-white ">Dark</span>
-                                </button>
-                            </div>
+                    </div>
+                    <div class="mt-3 flex space-x-2">
+                        <button id="tocTab"
+                            class="px-3 py-1 text-sm font-medium text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400">TOC</button>
+                        <button id="notesTab"
+                            class="px-3 py-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">Notes</button>
+                    </div>
+                </div>
+
+                <div id="tocContent" class="flex-1 overflow-y-auto p-4">
+                    <div id="toc" class="space-y-2"></div>
+                </div>
+
+                <div id="notesContent" class="flex-1 overflow-y-auto p-4 hidden">
+                    <div id="notesList" class="space-y-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col">
+            <!-- EPUB Viewer -->
+            <div id="viewer"
+                class="flex-1 epub-container bg-white dark:bg-gray-800 mx-4 my-4 rounded-xl shadow-lg overflow-hidden">
+            </div>
+
+            <!-- Bottom Controls -->
+            <div
+                class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+                <!-- Progress Bar -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        <span id="currentLocation">Chapter 1</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <input type="range" id="progressSlider" min="0" max="100" value="0"
+                        class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider-thumb">
+                </div>
+
+                <!-- Navigation Controls -->
+                <div class="flex items-center justify-between">
+                    <button id="prevBtn"
+                        class="flex items-center space-x-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7">
+                            </path>
+                        </svg>
+                        <span>Previous</span>
+                    </button>
+
+                    <div class="flex items-center space-x-4">
+                        <button id="highlightBtn"
+                            class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                            title="Highlight Text">
+                            <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                                </path>
+                            </svg>
+                        </button>
+                        <span id="pageInfo" class="text-sm text-gray-600 dark:text-gray-400 min-w-24 text-center">Page
+                            1</span>
+                    </div>
+
+                    <button id="nextBtn"
+                        class="flex items-center space-x-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span>Next</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full animate-fade-in">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-semibold text-gray-800 dark:text-white">Reading Settings</h3>
+                    <button id="closeSettings" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Font Size -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Font Size</label>
+                        <div class="flex items-center space-x-4">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">A</span>
+                            <input type="range" id="fontSizeSlider" min="12" max="24" value="16"
+                                class="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider-thumb">
+                            <span class="text-lg text-gray-600 dark:text-gray-400">A</span>
+                        </div>
+                        <div class="text-center mt-2">
+                            <span id="fontSizeValue" class="text-sm text-gray-600 dark:text-gray-400">16px</span>
+                        </div>
+                    </div>
+
+                    <!-- Theme Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Reading
+                            Theme</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button id="lightTheme"
+                                class="p-3 rounded-lg border-2 border-gray-200 hover:border-indigo-500 transition-colors bg-white">
+                                <div class="w-full h-8 bg-white rounded border"></div>
+                                <span class="text-xs text-gray-600 mt-2 block">Light</span>
+                            </button>
+                            <button id="darkTheme"
+                                class="p-3 rounded-lg border-2 border-gray-200 hover:border-indigo-500 transition-colors bg-gray-800">
+                                <div class="w-full h-8 bg-gray-800 rounded border border-gray-600"></div>
+                                <span class="text-xs text-white mt-2 block">Dark</span>
+                            </button>
+                            <button id="sepiaTheme"
+                                class="p-3 rounded-lg border-2 border-gray-200 hover:border-indigo-500 transition-colors bg-yellow-50">
+                                <div class="w-full h-8 bg-yellow-50 rounded border border-yellow-200"></div>
+                                <span class="text-xs text-gray-600 mt-2 block">Sepia</span>
+                            </button>
                         </div>
                     </div>
                 </div>
-            </nav>
+            </div>
         </div>
-    </section>
+    </div>
 
+    <!-- Highlight Menu -->
+    <div id="highlightMenu" class="fixed glassmorphism rounded-lg p-2 z-50 hidden">
+        <div class="flex space-x-2">
+            <button class="highlight-color w-8 h-8 rounded-full bg-yellow-400 hover:scale-110 transition-transform"
+                data-color="yellow"></button>
+            <button class="highlight-color w-8 h-8 rounded-full bg-blue-400 hover:scale-110 transition-transform"
+                data-color="blue"></button>
+            <button class="highlight-color w-8 h-8 rounded-full bg-green-400 hover:scale-110 transition-transform"
+                data-color="green"></button>
+            <button id="addNote"
+                class="w-8 h-8 rounded-full bg-gray-400 hover:scale-110 transition-transform flex items-center justify-center">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                    </path>
+                </svg>
+            </button>
+        </div>
+    </div>
 
+    <!-- Note Modal -->
+    <div id="noteModal"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full animate-fade-in">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Add Note</h3>
+                    <button id="closeNoteModal" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="selectedTextPreview"
+                    class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg mb-4 text-sm text-gray-600 dark:text-gray-300 italic">
+                </div>
+                <textarea id="noteText" placeholder="Add your note here..."
+                    class="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white"></textarea>
+                <div class="flex justify-end space-x-2 mt-4">
+                    <button id="cancelNote"
+                        class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">Cancel</button>
+                    <button id="saveNote"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">Save
+                        Note</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="scripts/jszip.min.js"></script>
-    <script src="scripts/epub/epub.js"></script>
-    <script src="scripts/script-oop.js"></script>
+    <script src="scripts/epub/epub.min.js"></script>
+    <script>
+        class EPUBReader {
+            constructor() {
+                this.book = null;
+                this.rendition = null;
+                this.currentLocation = null;
+                this.highlights = JSON.parse(localStorage.getItem('epub-highlights') || '[]');
+                this.notes = JSON.parse(localStorage.getItem('epub-notes') || '[]');
+                this.settings = JSON.parse(localStorage.getItem('epub-settings') || '{"fontSize": 16, "theme": "light"}');
+                this.selectedRange = null;
+
+                this.initializeTheme();
+                this.bindEvents();
+                this.loadEPUB();
+            }
+
+            initializeTheme() {
+                if (this.settings.theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                }
+            }
+
+            getEPUBUrl() {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get('epub') || 'https://s3.amazonaws.com/moby-dick/moby-dick.epub';
+            }
+
+            async loadEPUB() {
+                try {
+                    const epubUrl = this.getEPUBUrl();
+                    this.book = ePub(epubUrl);
+
+                    this.rendition = this.book.renderTo("viewer", {
+                        width: "100%",
+                        height: "100%",
+                        spread: "none"
+                    });
+
+                    await this.rendition.display();
+
+                    // Load book metadata
+                    await this.book.ready;
+                    document.getElementById('bookTitle').textContent = this.book.package.metadata.title || 'EPUB Reader';
+
+                    // Generate TOC
+                    await this.generateTOC();
+
+                    // Apply settings
+                    this.applySettings();
+
+                    // Setup event listeners
+                    this.setupReaderEvents();
+
+                    // Hide loading screen
+                    document.getElementById('loading').classList.add('hidden');
+
+                } catch (error) {
+                    console.error('Error loading EPUB:', error);
+                    document.getElementById('loading').innerHTML = `
+                        <div class="text-center">
+                            <div class="text-red-500 mb-4">
+                                <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                            </div>
+                            <p class="text-red-600 dark:text-red-400 font-medium">Failed to load EPUB</p>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Please check the URL and try again</p>
+                        </div>
+                    `;
+                }
+            }
+
+            async generateTOC() {
+                const navigation = await this.book.loaded.navigation;
+                const tocElement = document.getElementById('toc');
+
+                const renderTOCItems = (items, level = 0) => {
+                    return items.map(item => {
+                        const tocItem = document.createElement('div');
+                        tocItem.className = `toc-item cursor-pointer p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${level > 0 ? 'ml-4' : ''}`;
+                        tocItem.innerHTML = `
+                            <div class="text-sm font-medium text-gray-800 dark:text-white">${item.label}</div>
+                        `;
+
+                        tocItem.addEventListener('click', () => {
+                            this.rendition.display(item.href);
+                            this.closeSidebar();
+                        });
+
+                        tocElement.appendChild(tocItem);
+
+                        if (item.subitems && item.subitems.length > 0) {
+                            renderTOCItems(item.subitems, level + 1);
+                        }
+                    });
+                };
+
+                renderTOCItems(navigation.toc);
+            }
+
+            setupReaderEvents() {
+                // Navigation
+                this.rendition.on("relocated", (location) => {
+                    this.currentLocation = location;
+                    this.updateProgress();
+                    this.updatePageInfo();
+                });
+
+                // Text selection for highlighting
+                this.rendition.on("selected", (cfiRange, contents) => {
+                    this.selectedRange = cfiRange;
+                    this.showHighlightMenu(contents.range);
+                });
+
+                // Apply existing highlights
+                this.applyHighlights();
+            }
+
+            updateProgress() {
+                if (this.currentLocation) {
+                    const progress = this.book.locations.percentageFromCfi(this.currentLocation.start.cfi);
+                    const percentage = Math.round(progress * 100);
+
+                    document.getElementById('progressSlider').value = percentage;
+                    document.getElementById('progressPercent').textContent = `${percentage}%`;
+                }
+            }
+
+            updatePageInfo() {
+                if (this.currentLocation) {
+                    const currentPage = this.currentLocation.start.displayed.page;
+                    const totalPages = this.currentLocation.start.displayed.total;
+                    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+                }
+            }
+
+            showHighlightMenu(range) {
+                const rect = range.getBoundingClientRect();
+                const menu = document.getElementById('highlightMenu');
+
+                menu.style.left = `${rect.left + (rect.width / 2) - 100}px`;
+                menu.style.top = `${rect.top - 50}px`;
+                menu.classList.remove('hidden');
+
+                // Hide menu after 5 seconds
+                setTimeout(() => {
+                    menu.classList.add('hidden');
+                }, 5000);
+            }
+
+            addHighlight(color) {
+                if (this.selectedRange) {
+                    const highlight = {
+                        cfi: this.selectedRange,
+                        color: color,
+                        text: this.rendition.getRange(this.selectedRange).toString(),
+                        timestamp: new Date().toISOString()
+                    };
+
+                    this.highlights.push(highlight);
+                    localStorage.setItem('epub-highlights', JSON.stringify(this.highlights));
+
+                    this.rendition.annotations.add("highlight", this.selectedRange, {}, null, "highlight-" + color);
+                    document.getElementById('highlightMenu').classList.add('hidden');
+                }
+            }
+
+            applyHighlights() {
+                this.highlights.forEach(highlight => {
+                    this.rendition.annotations.add("highlight", highlight.cfi, {}, null, "highlight-" + highlight.color);
+                });
+            }
+
+            addNote(text) {
+                if (this.selectedRange) {
+                    const note = {
+                        cfi: this.selectedRange,
+                        text: text,
+                        selectedText: this.rendition.getRange(this.selectedRange).toString(),
+                        timestamp: new Date().toISOString(),
+                        chapter: this.currentLocation ? this.currentLocation.start.displayed.chapter : 'Unknown'
+                    };
+
+                    this.notes.push(note);
+                    localStorage.setItem('epub-notes', JSON.stringify(this.notes));
+                    this.renderNotes();
+                    this.addHighlight('blue'); // Add blue highlight for notes
+                }
+            }
+
+            renderNotes() {
+                const notesList = document.getElementById('notesList');
+                notesList.innerHTML = '';
+
+                this.notes.forEach((note, index) => {
+                    const noteElement = document.createElement('div');
+                    noteElement.className = 'bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700';
+                    noteElement.innerHTML = `
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">${note.chapter}</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-300 italic mb-2">"${note.selectedText.substring(0, 100)}${note.selectedText.length > 100 ? '...' : ''}"</div>
+                        <div class="text-sm text-gray-800 dark:text-white">${note.text}</div>
+                        <div class="flex justify-between items-center mt-3">
+                            <span class="text-xs text-gray-500 dark:text-gray-400">${new Date(note.timestamp).toLocaleDateString()}</span>
+                            <button onclick="reader.deleteNote(${index})" class="text-red-500 hover:text-red-700 text-xs">Delete</button>
+                        </div>
+                    `;
+
+                    noteElement.addEventListener('click', (e) => {
+                        if (e.target.tagName !== 'BUTTON') {
+                            this.rendition.display(note.cfi);
+                            this.closeSidebar();
+                        }
+                    });
+
+                    notesList.appendChild(noteElement);
+                });
+            }
+
+            deleteNote(index) {
+                this.notes.splice(index, 1);
+                localStorage.setItem('epub-notes', JSON.stringify(this.notes));
+                this.renderNotes();
+            }
+
+            applySettings() {
+                // Apply font size
+                this.rendition.themes.fontSize(`${this.settings.fontSize}px`);
+                document.getElementById('fontSizeSlider').value = this.settings.fontSize;
+                document.getElementById('fontSizeValue').textContent = `${this.settings.fontSize}px`;
+
+                // Apply theme
+                this.applyTheme(this.settings.theme);
+                this.updateThemeButtons();
+            }
+
+            applyTheme(theme) {
+                this.settings.theme = theme;
+                localStorage.setItem('epub-settings', JSON.stringify(this.settings));
+
+                // Apply to document
+                document.documentElement.classList.remove('dark');
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                }
+
+                // Apply to rendition
+                this.rendition.themes.register("light", {
+                    "body": {
+                        "background": "#ffffff",
+                        "color": "#1f2937"
+                    }
+                });
+
+                this.rendition.themes.register("dark", {
+                    "body": {
+                        "background": "#1f2937",
+                        "color": "#f9fafb"
+                    }
+                });
+
+                this.rendition.themes.register("sepia", {
+                    "body": {
+                        "background": "#fefce8",
+                        "color": "#451a03"
+                    }
+                });
+
+                this.rendition.themes.select(theme);
+            }
+
+            updateThemeButtons() {
+                document.querySelectorAll('[id$="Theme"]').forEach(btn => {
+                    btn.classList.remove('border-indigo-500');
+                    btn.classList.add('border-gray-200');
+                });
+
+                const activeThemeBtn = document.getElementById(this.settings.theme + 'Theme');
+                if (activeThemeBtn) {
+                    activeThemeBtn.classList.remove('border-gray-200');
+                    activeThemeBtn.classList.add('border-indigo-500');
+                }
+            }
+
+            changeFontSize(size) {
+                this.settings.fontSize = size;
+                localStorage.setItem('epub-settings', JSON.stringify(this.settings));
+                this.rendition.themes.fontSize(`${size}px`);
+                document.getElementById('fontSizeValue').textContent = `${size}px`;
+            }
+
+            goToProgress(percentage) {
+                const cfi = this.book.locations.cfiFromPercentage(percentage / 100);
+                this.rendition.display(cfi);
+            }
+
+            nextPage() {
+                this.rendition.next();
+            }
+
+            prevPage() {
+                this.rendition.prev();
+            }
+
+            openSidebar() {
+                document.getElementById('sidebar').classList.remove('-translate-x-full');
+            }
+
+            closeSidebar() {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+
+            showTOC() {
+                document.getElementById('tocContent').classList.remove('hidden');
+                document.getElementById('notesContent').classList.add('hidden');
+                document.getElementById('tocTab').classList.add('text-indigo-600', 'dark:text-indigo-400', 'border-b-2', 'border-indigo-600', 'dark:border-indigo-400');
+                document.getElementById('tocTab').classList.remove('text-gray-500', 'dark:text-gray-400');
+                document.getElementById('notesTab').classList.remove('text-indigo-600', 'dark:text-indigo-400', 'border-b-2', 'border-indigo-600', 'dark:border-indigo-400');
+                document.getElementById('notesTab').classList.add('text-gray-500', 'dark:text-gray-400');
+            }
+
+            showNotes() {
+                document.getElementById('notesContent').classList.remove('hidden');
+                document.getElementById('tocContent').classList.add('hidden');
+                document.getElementById('notesTab').classList.add('text-indigo-600', 'dark:text-indigo-400', 'border-b-2', 'border-indigo-600', 'dark:border-indigo-400');
+                document.getElementById('notesTab').classList.remove('text-gray-500', 'dark:text-gray-400');
+                document.getElementById('tocTab').classList.remove('text-indigo-600', 'dark:text-indigo-400', 'border-b-2', 'border-indigo-600', 'dark:border-indigo-400');
+                document.getElementById('tocTab').classList.add('text-gray-500', 'dark:text-gray-400');
+                this.renderNotes();
+            }
+
+            bindEvents() {
+                // Header buttons
+                document.getElementById('menuBtn').addEventListener('click', () => this.openSidebar());
+                document.getElementById('settingsBtn').addEventListener('click', () => {
+                    document.getElementById('settingsModal').classList.remove('hidden');
+                });
+                document.getElementById('themeToggle').addEventListener('click', () => {
+                    const newTheme = this.settings.theme === 'dark' ? 'light' : 'dark';
+                    this.applyTheme(newTheme);
+                });
+
+                // Sidebar
+                document.getElementById('closeSidebar').addEventListener('click', () => this.closeSidebar());
+                document.getElementById('tocTab').addEventListener('click', () => this.showTOC());
+                document.getElementById('notesTab').addEventListener('click', () => this.showNotes());
+
+                // Navigation
+                document.getElementById('prevBtn').addEventListener('click', () => this.prevPage());
+                document.getElementById('nextBtn').addEventListener('click', () => this.nextPage());
+                document.getElementById('progressSlider').addEventListener('input', (e) => {
+                    this.goToProgress(parseInt(e.target.value));
+                });
+
+                // Settings modal
+                document.getElementById('closeSettings').addEventListener('click', () => {
+                    document.getElementById('settingsModal').classList.add('hidden');
+                });
+
+                document.getElementById('fontSizeSlider').addEventListener('input', (e) => {
+                    this.changeFontSize(parseInt(e.target.value));
+                });
+
+                // Theme buttons
+                document.getElementById('lightTheme').addEventListener('click', () => this.applyTheme('light'));
+                document.getElementById('darkTheme').addEventListener('click', () => this.applyTheme('dark'));
+                document.getElementById('sepiaTheme').addEventListener('click', () => this.applyTheme('sepia'));
+
+                // Highlight menu
+                document.querySelectorAll('.highlight-color').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.addHighlight(e.target.dataset.color);
+                    });
+                });
+
+                document.getElementById('addNote').addEventListener('click', () => {
+                    if (this.selectedRange) {
+                        const selectedText = this.rendition.getRange(this.selectedRange).toString();
+                        document.getElementById('selectedTextPreview').textContent = selectedText.substring(0, 200) + (selectedText.length > 200 ? '...' : '');
+                        document.getElementById('noteModal').classList.remove('hidden');
+                        document.getElementById('noteText').focus();
+                    }
+                });
+
+                // Note modal
+                document.getElementById('closeNoteModal').addEventListener('click', () => {
+                    document.getElementById('noteModal').classList.add('hidden');
+                    document.getElementById('noteText').value = '';
+                });
+
+                document.getElementById('cancelNote').addEventListener('click', () => {
+                    document.getElementById('noteModal').classList.add('hidden');
+                    document.getElementById('noteText').value = '';
+                });
+
+                document.getElementById('saveNote').addEventListener('click', () => {
+                    const noteText = document.getElementById('noteText').value.trim();
+                    if (noteText) {
+                        this.addNote(noteText);
+                        document.getElementById('noteModal').classList.add('hidden');
+                        document.getElementById('noteText').value = '';
+                    }
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowLeft') this.prevPage();
+                    if (e.key === 'ArrowRight') this.nextPage();
+                    if (e.key === 'Escape') {
+                        document.getElementById('settingsModal').classList.add('hidden');
+                        document.getElementById('noteModal').classList.add('hidden');
+                        document.getElementById('highlightMenu').classList.add('hidden');
+                        this.closeSidebar();
+                    }
+                });
+
+                // Click outside to close modals
+                document.addEventListener('click', (e) => {
+                    if (e.target.id === 'settingsModal') {
+                        document.getElementById('settingsModal').classList.add('hidden');
+                    }
+                    if (e.target.id === 'noteModal') {
+                        document.getElementById('noteModal').classList.add('hidden');
+                        document.getElementById('noteText').value = '';
+                    }
+                    if (!e.target.closest('#highlightMenu') && !e.target.closest('#viewer')) {
+                        document.getElementById('highlightMenu').classList.add('hidden');
+                    }
+                });
+            }
+        }
+
+        // Initialize the reader when DOM is loaded
+        let reader;
+        document.addEventListener('DOMContentLoaded', () => {
+            reader = new EPUBReader();
+        });
+    </script>
 </body>
 
 </html>
